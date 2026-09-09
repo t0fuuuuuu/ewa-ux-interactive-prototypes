@@ -2,18 +2,75 @@ const app = document.querySelector('#app');
 const toast = document.querySelector('#toast');
 const dialogRoot = document.querySelector('#dialog-root');
 
+const productFundMatrix = {
+  'future-assure-max-sp-peso': ['bond', 'balanced', 'high-dividend', 'active-equity', 'asian-equity', 'peso-global-esg', 'global-reit'],
+  'future-assure-max-sp-usd': ['dollar-esg', 'dollar-income'],
+  'future-assure-3-pay-peso': ['bond', 'balanced', 'high-dividend', 'active-equity', 'asian-equity', 'peso-global-esg', 'global-reit', 'global-strategic'],
+  'future-assure-5-pay-peso': ['bond', 'balanced', 'high-dividend', 'active-equity', 'asian-equity', 'peso-global-esg'],
+  'future-assure-10-pay-peso': ['bond', 'balanced', 'high-dividend', 'active-equity', 'asian-equity', 'peso-global-esg'],
+  'future-assure-regular-peso': ['bond', 'balanced', 'high-dividend', 'active-equity', 'asian-equity', 'peso-global-esg'],
+};
+
 const policies = [
-  { id: '810000085627', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE', status: 'Inforce', eligible: true },
-  { id: '810000086143', owner: 'Elizabeth Garcia', product: 'DREAM BUILDER', status: 'Inforce', eligible: true },
-  { id: '810000087920', owner: 'Elizabeth Garcia', product: 'SURE START', status: 'Lapsed', eligible: false },
-  { id: '810000088405', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX', status: 'Terminated', eligible: false },
+  { id: '810000085627', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE (REGULAR PAY PESO)', productKey: 'future-assure-regular-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: true },
+  { id: '810000086143', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX (SP US DOLLAR)', productKey: 'future-assure-max-sp-usd', productType: 'VUL', currency: 'USD', status: 'Inforce', fundSwitchEligible: true, selectable: true },
+  { id: '810000089312', owner: 'Elizabeth Garcia', product: 'DREAM BUILDER', productType: 'Non-VUL', status: 'Inforce', fundSwitchEligible: false, selectable: true },
+  { id: '810000090301', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX (SP PESO)', productKey: 'future-assure-max-sp-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: true },
+  { id: '810000090302', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE (3-PAY PESO)', productKey: 'future-assure-3-pay-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: true },
+  { id: '810000090303', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE (5-PAY PESO)', productKey: 'future-assure-5-pay-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: true },
+  { id: '810000090304', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE (10-PAY PESO)', productKey: 'future-assure-10-pay-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: true },
+  { id: '810000090305', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX (SP US DOLLAR)', productKey: 'future-assure-max-sp-usd', productType: 'VUL', currency: 'USD', status: 'Inforce', fundSwitchEligible: true, selectable: true },
+  { id: '810000090306', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX (SP US DOLLAR)', productKey: 'future-assure-max-sp-usd', productType: 'VUL', currency: 'USD', status: 'Inforce', fundSwitchEligible: true, selectable: true },
+  { id: '810000090307', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE (5-PAY PESO)', productKey: 'future-assure-5-pay-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: false, pendingRequest: true },
+  { id: '810000087920', owner: 'Elizabeth Garcia', product: 'SURE START', productType: 'Non-VUL', status: 'Lapsed', fundSwitchEligible: false, selectable: false },
+  { id: '810000088405', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX', productType: 'VUL', status: 'Terminated', fundSwitchEligible: false, selectable: false },
 ];
 
 const funds = [
-  { id: 'balanced', name: 'Peso Balanced Fund', allocation: 60, value: 210000, type: 'Balanced', risk: 'Moderate Risk', riskRank: 2 },
-  { id: 'bond', name: 'Peso Bond Fund', allocation: 40, value: 140000, type: 'Fixed Income', risk: 'Moderate Risk', riskRank: 2 },
-  { id: 'equity', name: 'Peso Equity Fund', allocation: 0, value: 0, type: 'Equity', risk: 'High Risk', riskRank: 3 },
+  { id: 'bond', name: 'Peso Bond Fund', currency: 'PHP', type: 'Fixed Income', risk: 'Moderately Conservative', riskScore: 3 },
+  { id: 'balanced', name: 'Peso Balanced Fund', currency: 'PHP', type: 'Balanced', risk: 'Moderate', riskScore: 6 },
+  { id: 'equity', name: 'Peso Equity Fund', currency: 'PHP', type: 'Equity', risk: 'Moderately Aggressive', riskScore: 7 },
+  { id: 'high-dividend', name: 'Peso High Dividend Equity Fund', currency: 'PHP', type: 'Equity', risk: 'Moderately Aggressive', riskScore: 7 },
+  { id: 'active-equity', name: 'Peso Active Equity Fund', currency: 'PHP', type: 'Equity', risk: 'Moderately Aggressive', riskScore: 7 },
+  { id: 'asian-equity', name: 'Asian Equity Fund', currency: 'PHP', type: 'Equity', risk: 'Aggressive', riskScore: 9 },
+  { id: 'peso-global-esg', name: 'Peso Global ESG Equity Fund', currency: 'PHP', type: 'Equity', risk: 'Aggressive', riskScore: 9 },
+  { id: 'global-reit', name: 'Peso Global REIT Payout Fund', currency: 'PHP', type: 'Multi-Asset', risk: 'Aggressive', riskScore: 9 },
+  { id: 'global-strategic', name: 'Peso Global Strategic Payout Fund', currency: 'PHP', type: 'Multi-Asset', risk: 'Aggressive', riskScore: 9 },
+  { id: 'dollar-esg', name: 'Dollar Global ESG Equity Fund', currency: 'USD', type: 'Equity', risk: 'Aggressive', riskScore: 9 },
+  { id: 'dollar-income', name: 'Dollar Income Paying Fund', currency: 'USD', type: 'Multi-Asset', risk: 'Aggressive', riskScore: 9 },
 ];
+
+const policyHoldings = {
+  '810000085627': [
+    { id: 'balanced', allocation: 60, value: 210000, navpu: 'PHP 1.1023', units: '190,526.379', accent: 'balanced' },
+    { id: 'bond', allocation: 40, value: 140000, navpu: 'PHP 1.1102', units: '126,103.016', accent: 'bond' },
+  ],
+  '810000086143': [
+    { id: 'dollar-esg', allocation: 60, value: 6300, navpu: 'USD 1.0749', units: '5,860.080', accent: 'balanced' },
+    { id: 'dollar-income', allocation: 40, value: 4200, navpu: 'USD 1.0000', units: '4,200.000', accent: 'bond' },
+  ],
+  '810000090301': [
+    { id: 'bond', allocation: 50, value: 50000, navpu: 'PHP 1.1102', units: '45,036.930', accent: 'bond' },
+    { id: 'global-reit', allocation: 50, value: 50000, navpu: 'PHP 1.0575', units: '47,281.324', accent: 'balanced' },
+  ],
+  '810000090302': [
+    { id: 'bond', allocation: 67, value: 50000, navpu: 'PHP 1.1102', units: '45,036.930', accent: 'bond' },
+    { id: 'global-strategic', allocation: 33, value: 25000, navpu: 'PHP 1.0290', units: '24,295.432', accent: 'balanced' },
+  ],
+  '810000090303': [
+    { id: 'bond', allocation: 33, value: 9999.99, navpu: 'PHP 1.1102', units: '9,007.197', accent: 'bond' },
+    { id: 'balanced', allocation: 67, value: 20000, navpu: 'PHP 1.1023', units: '18,143.881', accent: 'balanced' },
+  ],
+  '810000090304': [
+    { id: 'bond', allocation: 100, value: 10000, navpu: 'PHP 1.1102', units: '9,007.206', accent: 'bond' },
+  ],
+  '810000090305': [
+    { id: 'dollar-income', allocation: 100, value: 500, navpu: 'USD 1.0000', units: '500.000', accent: 'bond' },
+  ],
+  '810000090306': [
+    { id: 'dollar-income', allocation: 100, value: 499.99, navpu: 'USD 1.0000', units: '499.990', accent: 'bond' },
+  ],
+};
 
 const fundDetails = {
   balanced: {
@@ -37,6 +94,20 @@ const fundDetails = {
     horizon: '5 years or more',
     horizonLabel: 'Long Term',
     launchDate: 'September 3, 2013',
+  },
+  'dollar-esg': {
+    description: 'The Dollar Global ESG Equity Fund provides exposure to global companies while considering environmental, social, and governance factors.',
+    objective: 'The fund aims for long-term capital growth through a diversified portfolio of global equities.',
+    horizon: '5 years or more',
+    horizonLabel: 'Long Term',
+    launchDate: 'February 1, 2022',
+  },
+  'dollar-income': {
+    description: 'The Dollar Income Paying Fund invests in a diversified US-dollar portfolio designed to provide regular income.',
+    objective: 'The fund aims to provide income and capital stability from US-dollar-denominated investments.',
+    horizon: '3 - 5 years or more',
+    horizonLabel: 'Medium to Long Term',
+    launchDate: 'February 1, 2022',
   },
 };
 
@@ -62,10 +133,10 @@ const investmentPolicies = [
     ],
   },
   {
-    id: '810000086143', title: "Elizabeth's Policy", product: 'DREAM BUILDER', payout: 'Reinvestment', asOf: 'Sep 03, 2026', value: 188500,
+    id: '810000086143', title: "Elizabeth's Policy", product: 'FUTURE ASSURE MAX (US DOLLAR)', currency: 'USD', payout: 'Reinvestment', asOf: 'Sep 03, 2026', value: 10500,
     funds: [
-      { id: 'balanced', name: 'Peso Balanced Fund', navpu: 'PHP 1.1023', units: '108,870.492', allocation: '64%', value: 120500, accent: 'balanced' },
-      { id: 'bond', name: 'Peso Bond Fund', navpu: 'PHP 1.1102', units: '61,247.117', allocation: '36%', value: 68000, accent: 'bond' },
+      { id: 'dollar-esg', name: 'Dollar Global ESG Equity Fund', navpu: 'USD 1.0749', units: '5,860.080', allocation: '60%', value: 6300, accent: 'balanced' },
+      { id: 'dollar-income', name: 'Dollar Income Paying Fund', navpu: 'USD 1.0000', units: '4,200.000', allocation: '40%', value: 4200, accent: 'bond' },
     ],
   },
 ];
@@ -82,13 +153,16 @@ const rpqQuestions = [
 
 const initialState = () => ({
   screen: 'services',
+  activeNav: 'Services',
   investmentPeriod: '1 Year',
   investmentExpandedPolicyId: '',
+  requestExpanded: false,
   policyId: '',
   sourceId: '',
   targetId: '',
   currentRiskProfile: 'Moderate',
   rpqAnswers: {},
+  rpqSubmitting: false,
   rpqComplete: false,
   rpqResult: '',
   ipsAcknowledged: false,
@@ -104,30 +178,66 @@ const initialState = () => ({
   submitting: false,
   requestNumber: '#23457640001',
   requestStatus: '',
+  requestPolicyId: '',
   draftResumeScreen: 'funds',
   draftResumeModal: '',
+  vulConsultationRequested: false,
 });
 
 let state = initialState();
 let toastTimer;
 let fundCheckTimer;
 let submissionTimer;
+let rpqTimer;
 let draftReturnContext = 'page';
 
-function money(value) {
-  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 2 }).format(value || 0);
+function money(value, currency = selectedPolicy()?.currency || 'PHP') {
+  return new Intl.NumberFormat('en-PH', { style: 'currency', currency, currencyDisplay: currency === 'USD' ? 'code' : 'symbol', maximumFractionDigits: 2 }).format(value || 0);
 }
 
 function selectedPolicy() { return policies.find((policy) => policy.id === state.policyId); }
-function selectedSource() { return funds.find((fund) => fund.id === state.sourceId); }
-function selectedTarget() { return funds.find((fund) => fund.id === state.targetId); }
-function requiresRiskAssessment() { return Boolean(selectedTarget() && selectedTarget().riskRank > 2); }
-function riskRankForProfile(profile) { return ({ Conservative: 1, Moderate: 2, Aggressive: 3 })[profile] || 0; }
-function resultAligned() { return Boolean(selectedTarget() && riskRankForProfile(state.rpqResult) >= selectedTarget().riskRank); }
+function policyFunds(policyId = state.policyId) {
+  return (policyHoldings[policyId] || []).map((holding) => ({ ...funds.find((fund) => fund.id === holding.id), ...holding }));
+}
+function availablePolicyFunds() {
+  const policy = selectedPolicy();
+  const currency = policy?.currency;
+  const allowedFundIds = productFundMatrix[policy?.productKey] || [];
+  const holdings = policyFunds();
+  return funds
+    .filter((fund) => fund.currency === currency && allowedFundIds.includes(fund.id))
+    .map((fund) => ({ ...fund, ...(holdings.find((holding) => holding.id === fund.id) || { allocation: 0, value: 0 }) }));
+}
+function selectedSource() { return policyFunds().find((fund) => fund.id === state.sourceId); }
+function selectedTarget() { return availablePolicyFunds().find((fund) => fund.id === state.targetId); }
+function requiresRiskAssessment() {
+  const source = selectedSource();
+  const target = selectedTarget();
+  return Boolean(source && target && target.riskScore > source.riskScore);
+}
+function riskScoreForProfile(profile) {
+  return ({ 'Moderately Conservative': 3, Moderate: 6, 'Moderately Aggressive': 7, Aggressive: 9 })[profile] || 0;
+}
+function resultAligned() { return Boolean(selectedTarget() && riskScoreForProfile(state.rpqResult) >= selectedTarget().riskScore); }
 function riskGateComplete() { return !requiresRiskAssessment() || (state.ipsAccepted && resultAligned()); }
 function switchAmount() {
   const source = selectedSource();
   return source?.value || 0;
+}
+function minimumSwitchAmount(currency = selectedPolicy()?.currency) { return currency === 'USD' ? 500 : 10000; }
+function meetsMinimumSwitch() { return Boolean(selectedSource() && switchAmount() >= minimumSwitchAmount()); }
+function hasPendingRequest(policy) {
+  return Boolean(policy.pendingRequest || (state.requestPolicyId === policy.id && ['Draft', 'Submitted', 'In Progress', 'Additional Documents Required'].includes(state.requestStatus)));
+}
+function resetSuitability() {
+  clearTimeout(fundCheckTimer);
+  state.rpqAnswers = {};
+  state.rpqComplete = false;
+  state.rpqResult = '';
+  state.ipsAcknowledged = false;
+  state.ipsAccepted = false;
+  state.assessmentStage = '';
+  state.fundCheck = 'idle';
 }
 
 function showToast(message) {
@@ -208,9 +318,10 @@ function serviceCard({ iconName, title, copy, action, featured = false, label = 
 }
 
 function servicesView() {
+  const requestPolicy = policies.find((policy) => policy.id === state.requestPolicyId);
   const requestContent = state.requestStatus ? `
-    <button class="request-policy-row" type="button" data-action="open-policy-requests" aria-label="View requests for policy 810000085627">
-      <span><strong>Policy Number</strong><small>810000085627</small></span>${icon('keyboard_arrow_right')}
+    <button class="request-policy-row" type="button" data-action="open-policy-requests" aria-label="View requests for policy ${requestPolicy?.id || ''}">
+      <span><strong>Policy Number</strong><small>${requestPolicy?.id || ''}</small></span>${icon('keyboard_arrow_right')}
     </button>` : `<p class="empty-state">${icon('inventory_2')}<span>No requests yet. To submit a request, choose a service above and complete the required steps.</span></p>`;
   return `
     <section class="services-panel" aria-labelledby="page-title">
@@ -235,8 +346,8 @@ function investmentView() {
     const expanded = state.investmentExpandedPolicyId === policy.id;
     return `<article class="investment-policy-card ${expanded ? 'expanded' : ''}">
       <header><div><h2>${policy.title}</h2><p>${policy.product} <span>#${policy.id}</span></p></div><div class="investment-policy-actions"><button class="text-action" type="button" data-action="toggle-policy-breakdown" data-policy-id="${policy.id}" aria-expanded="${expanded}">${expanded ? 'Hide' : 'Show'} Fund Breakdown ${icon(expanded ? 'expand_less' : 'expand_more')}</button></div></header>
-      <div class="policy-overview"><div><span>Income Payout Option ${icon('help')}</span><strong>${policy.payout}</strong><small>AS OF ${policy.asOf.toUpperCase()}</small></div><div><span>Fund Value ${icon('help')}</span><strong>${money(policy.value)}</strong></div></div>
-      ${expanded ? `<div class="investment-breakdown" role="table" aria-label="${policy.title} fund breakdown"><div class="investment-fund-table-head" role="row"><span role="columnheader">Fund Name ${icon('help')} ${icon('north')}</span><span role="columnheader">NAVPU ${icon('help')}</span><span role="columnheader">Units ${icon('help')}</span><span role="columnheader">Allocation ${icon('help')}</span><span role="columnheader">Fund Value ${icon('help')}</span></div>${policy.funds.map((fund) => `<div class="investment-fund-table-row ${fund.accent}" role="row"><span role="cell" class="investment-held-fund">${fund.name}</span><span role="cell">${fund.navpu}</span><span role="cell">${fund.units}</span><span role="cell">${fund.allocation}</span><span role="cell" class="investment-fund-value"><strong>${money(fund.value)}</strong><button class="fund-switch-action" type="button" data-action="start-policy-fund-switch" data-policy-id="${policy.id}" data-source-id="${fund.id}">Switch fund</button></span></div>`).join('')}</div>` : ''}
+      <div class="policy-overview"><div><span>Income Payout Option ${icon('help')}</span><strong>${policy.payout}</strong><small>AS OF ${policy.asOf.toUpperCase()}</small></div><div><span>Fund Value ${icon('help')}</span><strong>${money(policy.value, policy.currency || 'PHP')}</strong></div></div>
+      ${expanded ? `<div class="investment-breakdown" role="table" aria-label="${policy.title} fund breakdown"><div class="investment-fund-table-head" role="row"><span role="columnheader">Fund Name ${icon('help')} ${icon('north')}</span><span role="columnheader">NAVPU ${icon('help')}</span><span role="columnheader">Units ${icon('help')}</span><span role="columnheader">Allocation ${icon('help')}</span><span role="columnheader">Fund Value ${icon('help')}</span><span role="columnheader" class="visually-hidden">Action</span></div>${policy.funds.map((fund) => `<div class="investment-fund-table-row ${fund.accent}" role="row"><span role="cell" class="investment-held-fund">${fund.name}</span><span role="cell">${fund.navpu}</span><span role="cell">${fund.units}</span><span role="cell">${fund.allocation}</span><span role="cell" class="investment-fund-value"><strong>${money(fund.value, policy.currency || 'PHP')}</strong></span><span role="cell" class="investment-fund-action"><button class="fund-switch-action" type="button" data-action="start-policy-fund-switch" data-policy-id="${policy.id}" data-source-id="${fund.id}">Switch fund</button></span></div>`).join('')}</div>` : ''}
     </article>`;
   };
   return `
@@ -270,7 +381,9 @@ function investmentView() {
 }
 
 function requestsView() {
-  const policy = policies[0];
+  const policy = policies.find((item) => item.id === state.requestPolicyId) || policies[0];
+  const isDraft = state.requestStatus === 'Draft';
+  const expanded = !isDraft && state.requestExpanded;
   return `
     <section class="policy-requests-panel" aria-labelledby="policy-requests-title">
       <header class="policy-requests-header">
@@ -278,22 +391,30 @@ function requestsView() {
         <p>See all service requests linked to this policy. You can check progress, review details, or continue ongoing requests.</p>
       </header>
       <div class="policy-requests-body">
-        <button class="request-card" type="button" data-action="resume-request">
-          <span class="request-card-copy"><span class="request-card-title">Fund Switch Request ${statusTag(state.requestStatus)}</span><small>${policy.product} #${policy.id}</small></span>
-          ${icon(state.requestStatus === 'Draft' ? 'keyboard_arrow_right' : 'expand_more')}
-        </button>
+        ${expanded ? '<div class="request-date">As of September 3, 2026</div>' : ''}
+        <article class="request-card ${expanded ? 'expanded' : ''}">
+          <button class="request-card-toggle" type="button" data-action="${isDraft ? 'resume-request' : 'toggle-request-details'}" ${isDraft ? '' : `aria-expanded="${expanded}"`}>
+            <span class="request-card-copy"><span class="request-card-title">Fund Switch Request ${statusTag(state.requestStatus)}</span><small>${policy.product} #${policy.id}</small></span>
+            ${icon(isDraft ? 'keyboard_arrow_right' : expanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down')}
+          </button>
+          ${expanded ? `<div class="request-progress" aria-label="Fund switch request progress">
+            <div class="request-progress-step complete"><span class="request-progress-indicator">${icon('check_circle')}</span><span><strong>Submitted</strong><small>Your fund switch request is under review. We’ll notify you if any additional information is required.</small></span></div>
+            <div class="request-progress-step upcoming"><span class="request-progress-indicator">${icon('circle')}</span><span><strong>In Progress</strong></span></div>
+            <div class="request-progress-step upcoming"><span class="request-progress-indicator">${icon('circle')}</span><span><strong>Completed</strong></span></div>
+          </div>` : ''}
+        </article>
       </div>
       <footer class="policy-requests-footer"><button class="btn btn-secondary" type="button" data-action="back-services">Back</button></footer>
     </section>`;
 }
 
-function flowLayout({ active, title, description, body, backAction, nextAction, nextLabel = 'Next', nextDisabled = false, extraFooter = '' }) {
-  const saveDraft = state.targetId && active >= 2 ? '<button class="btn btn-draft" type="button" data-action="save-draft">Save as Draft</button>' : '';
+function flowLayout({ active, title, description, body, backAction, nextAction, nextLabel = 'Next', nextDisabled = false, extraFooter = '', focusMode = false, headerExtra = '' }) {
+  const saveDraft = state.policyId && active >= 1 ? '<button class="btn btn-draft" type="button" data-action="save-draft">Save as Draft</button>' : '';
   return `
-    <section class="flow-shell">
-      ${steps(active)}
+    <section class="flow-shell ${focusMode ? 'focus-mode' : ''}">
+      ${focusMode ? '' : steps(active)}
       <section class="flow-panel" aria-labelledby="flow-title">
-        <header class="flow-header"><h1 id="flow-title">${title}</h1><p>${description}</p></header>
+        <header class="flow-header">${headerExtra}<h1 id="flow-title">${title}</h1><p>${description}</p></header>
         <div class="flow-body">${body}</div>
         <footer class="flow-footer">
           <button class="btn btn-secondary" type="button" data-action="${backAction}">Back</button>
@@ -304,11 +425,23 @@ function flowLayout({ active, title, description, body, backAction, nextAction, 
 }
 
 function policyOption(policy) {
+  const pending = hasPendingRequest(policy);
+  if (pending) {
+    return `
+      <button class="policy-option pending-policy" type="button" data-action="pending-policy-info" data-policy-id="${policy.id}" aria-label="${policy.owner}, ${policy.status}, ${policy.product}, policy ${policy.id}. Fund switch request pending">
+        <span class="policy-card">
+          <span class="policy-card-head"><span class="policy-name">${policy.owner}</span><span class="policy-badges">${statusTag(policy.status)}</span></span>
+          <span class="policy-meta">${policy.product} #${policy.id}</span>
+        </span>
+      </button>`;
+  }
+  const selectable = policy.selectable !== false && !pending;
+  const notEligible = !policy.fundSwitchEligible;
   return `
-    <label class="policy-option ${policy.eligible ? '' : 'disabled'}">
-      <input type="radio" name="policy" value="${policy.id}" ${state.policyId === policy.id ? 'checked' : ''} ${policy.eligible ? '' : 'disabled'} />
+    <label class="policy-option ${notEligible ? 'ineligible' : ''} ${selectable ? '' : 'disabled'}">
+      <input type="radio" name="policy" value="${policy.id}" ${state.policyId === policy.id ? 'checked' : ''} ${selectable ? '' : 'disabled'} />
       <span class="policy-card">
-        <span class="policy-card-head"><span class="policy-name">${policy.owner}</span>${statusTag(policy.status)}</span>
+        <span class="policy-card-head"><span class="policy-name">${policy.owner}</span><span class="policy-badges">${statusTag(policy.status)}${pending ? statusTag('Request pending') : ''}</span></span>
         <span class="policy-meta">${policy.product} #${policy.id}</span>
       </span>
     </label>`;
@@ -317,38 +450,58 @@ function policyOption(policy) {
 function policyView() {
   const body = `
     <div class="policy-list">
-      ${policies.filter((p) => p.eligible).map(policyOption).join('')}
+      ${policies.filter((p) => p.selectable !== false || p.pendingRequest).map(policyOption).join('')}
       <p class="policy-group-title">Other Policies</p>
-      ${policies.filter((p) => !p.eligible).map(policyOption).join('')}
+      ${policies.filter((p) => p.selectable === false && !p.pendingRequest).map(policyOption).join('')}
     </div>`;
   return flowLayout({ active: 1, title: 'Select Policy', description: 'Choose the policy you want to make fund switch for.', body, backAction: 'back-services', nextAction: 'to-funds', nextDisabled: !state.policyId });
 }
 
+function vulExploreView() {
+  const requested = state.vulConsultationRequested;
+  return `
+    <section class="services-panel vul-explore" aria-labelledby="vul-title">
+      <header class="vul-explore-hero">
+        <span class="vul-explore-icon">${icon('trending_up')}</span>
+        <div><p class="eyebrow">Investment-linked policies</p><h1 id="vul-title">Explore investment-linked policies</h1><p>Investment-linked policies can combine life protection with access to professionally managed investment funds.</p></div>
+      </header>
+      <div class="vul-explore-grid">
+        <article><h2>Understand the option</h2><p>Learn how investment-linked policies work, including investment risk, policy charges, and the difference from a traditional protection-only policy.</p></article>
+        <article><h2>Get tailored guidance</h2><p>A financial advisor can discuss whether an investment-linked policy may suit your goals, needs, and risk appetite.</p></article>
+      </div>
+      <div class="section-message ${requested ? 'section-message-success' : ''}">${icon(requested ? 'check_circle' : 'info')}<div><strong>${requested ? 'Consultation request recorded in this prototype' : 'No application has been started'}</strong><span>${requested ? 'A production journey would confirm the preferred contact details and obtain consent before an advisor follows up.' : 'Exploring this option does not change your policy or begin an application.'}</span></div></div>
+      <footer class="vul-explore-actions"><button class="btn btn-secondary" type="button" data-action="back-to-policy-selection">Choose another policy</button><button class="btn btn-primary" type="button" data-action="request-vul-consultation" ${requested ? 'disabled' : ''}>${requested ? 'Consultation requested' : 'Talk to a financial advisor'}</button></footer>
+    </section>`;
+}
+
 function fundOptions(kind) {
   const otherId = kind === 'source' ? state.targetId : state.sourceId;
-  return funds
+  const eligibleFunds = kind === 'source' ? policyFunds() : availablePolicyFunds();
+  return eligibleFunds
     .filter((fund) => fund.id !== otherId && (kind === 'source' ? fund.value > 0 : true))
     .map((fund) => ({ value: fund.id, label: fund.name, description: `${fund.type} | ${fund.risk}` }));
 }
 
 function sourceCard() {
   const source = selectedSource();
+  const belowMinimum = source && !meetsMinimumSwitch();
+  const minimum = minimumSwitchAmount();
   return `
     <section class="fund-card">
       <div class="fund-card-copy"><div class="eyebrow">SWITCH FROM</div><h2>${source ? source.name : 'Select a source fund'}</h2>
       ${source ? `<p>Current allocation: ${source.allocation}%</p><div class="fund-value">${money(source.value)}</div><p>Current fund value</p>` : '<p>Choose where your current fund will be switched from.</p>'}</div>
       ${selectField({ id: 'source-fund', label: 'Source fund', value: state.sourceId, placeholder: 'Choose a fund', options: fundOptions('source') })}
-      <div class="fund-card-action" aria-hidden="true"></div>
+      <div class="fund-card-action">${belowMinimum ? `<div class="field-error" role="alert">${icon('error')}<span>This fund is below the ${money(minimum)} minimum switch amount.</span></div>` : ''}</div>
     </section>`;
 }
 
 function targetCard() {
   const target = selectedTarget();
-  const disabled = !state.sourceId;
+  const disabled = !state.sourceId || !meetsMinimumSwitch();
   return `
     <section class="fund-card ${disabled ? 'disabled' : ''}">
       <div class="fund-card-copy"><div class="eyebrow">SWITCH TO</div><h2>${target ? target.name : 'Select a target fund'}</h2>
-      ${target ? `<p>${target.type} · <span class="risk-label ${target.riskRank > 2 ? 'aggressive' : ''}">${target.risk}</span></p><div class="fund-value">${money(target.value)}</div><p>Current fund value</p>` : '<p>Choose where your current fund will be switched.</p>'}</div>
+      ${target ? `<p>${target.type} · <span class="risk-label ${target.riskScore >= 7 ? 'aggressive' : ''}">${target.risk}</span></p><div class="fund-value">${money(target.value)}</div><p>Current fund value</p>` : '<p>Choose where your current fund will be switched.</p>'}</div>
       ${selectField({ id: 'target-fund', label: 'Target fund', value: state.targetId, placeholder: 'Choose a fund', options: fundOptions('target'), disabled })}
       <div class="fund-card-action">${state.fundCheck === 'checking' ? `<div class="fund-checking" role="status">${icon('progress_activity')}<span><strong>Checking fund requirements…</strong><small>Reviewing risk and suitability conditions</small></span></div>` : target ? '<button class="link-button" type="button" data-action="fund-details">View fund details</button>' : ''}</div>
     </section>`;
@@ -356,23 +509,20 @@ function targetCard() {
 
 function currentPortfolio() {
   const policy = selectedPolicy();
-  const currentFunds = funds.filter((fund) => fund.value > 0);
+  const currentFunds = policyFunds();
   const total = currentFunds.reduce((sum, fund) => sum + fund.value, 0);
+  const investmentPolicy = investmentPolicies.find((item) => item.id === policy.id);
   return `
-    <details class="portfolio-card">
-      <summary class="portfolio-summary">
-        <span>${icon('account_balance_wallet')}<span><strong>Current fund portfolio</strong><small>${currentFunds.length} funds · ${policy.product} · #${policy.id}</small></span></span>
-        <span class="portfolio-summary-total"><small>Total fund value</small><strong>${money(total)}</strong>${icon('expand_more')}</span>
+    <details class="investment-policy-card flow-portfolio-card">
+      <summary class="flow-portfolio-summary">
+        <span><strong>Elizabeth's Policy</strong><small>${policy.product} <span>#${policy.id}</span></small></span>
+        <span class="portfolio-toggle"><span class="show-label">Show Fund Breakdown</span><span class="hide-label">Hide Fund Breakdown</span>${icon('expand_more')}</span>
       </summary>
-      <div class="portfolio-list" role="list" aria-label="Current fund holdings">
-        ${currentFunds.map((fund) => `
-          <div class="portfolio-row" role="listitem">
-            <div><strong>${fund.name}</strong><span>${fund.type} · ${fund.risk}</span></div>
-            <div><span>Allocation</span><strong>${fund.allocation}%</strong></div>
-            <div><span>Current value</span><strong>${money(fund.value)}</strong></div>
-          </div>`).join('')}
+      <div class="policy-overview"><div><span>Income Payout Option ${icon('help')}</span><strong>${investmentPolicy?.payout || 'Reinvestment'}</strong><small>AS OF ${(investmentPolicy?.asOf || 'Sep 03, 2026').toUpperCase()}</small></div><div><span>Fund Value ${icon('help')}</span><strong>${money(total, policy.currency)}</strong></div></div>
+      <div class="investment-breakdown flow-investment-breakdown" role="table" aria-label="Current fund holdings">
+        <div class="investment-fund-table-head" role="row"><span role="columnheader">Fund Name ${icon('help')} ${icon('north')}</span><span role="columnheader">NAVPU ${icon('help')}</span><span role="columnheader">Units ${icon('help')}</span><span role="columnheader">Allocation ${icon('help')}</span><span role="columnheader">Fund Value ${icon('help')}</span></div>
+        ${currentFunds.map((fund) => `<div class="investment-fund-table-row ${fund.accent}" role="row"><span role="cell" class="investment-held-fund">${fund.name}</span><span role="cell" data-label="NAVPU">${fund.navpu}</span><span role="cell" data-label="Units">${fund.units}</span><span role="cell" data-label="Allocation">${fund.allocation}%</span><span role="cell" data-label="Fund Value" class="investment-fund-value"><strong>${money(fund.value, policy.currency)}</strong></span></div>`).join('')}
       </div>
-      <p class="portfolio-note">Values shown are the latest available in this prototype and may change with unit prices.</p>
     </details>`;
 }
 
@@ -382,7 +532,7 @@ function riskTriggerBanner() {
   if (state.rpqComplete && !resultAligned()) {
     return sectionMessage({ type: 'warning', iconName: 'warning', title: 'Selected fund is not aligned', text: `${selectedTarget().name} has a higher risk level than your ${state.rpqResult} result. Review your answers or choose another fund.`, className: 'flow-message' });
   }
-  return sectionMessage({ type: 'warning', iconName: 'warning', title: 'Risk profile update required', text: `${selectedTarget().name} is more aggressive than your current ${state.currentRiskProfile} profile. Complete the RPQ and review your IPS before choosing an allocation.`, className: 'flow-message' });
+  return sectionMessage({ type: 'warning', iconName: 'warning', title: 'Risk profile update required', text: `${selectedTarget().name} (${selectedTarget().risk}) is more aggressive than ${selectedSource().name} (${selectedSource().risk}). Complete the RPQ and review your IPS before continuing.`, className: 'flow-message' });
 }
 
 function riskRequirementsPanel() {
@@ -392,32 +542,34 @@ function riskRequirementsPanel() {
   const allDone = rpqDone && ipsDone;
   if (allDone) {
     return `
-      <section class="requirements-card complete compact" aria-labelledby="requirements-title">
-        <div class="requirements-header">
-          <div>${icon('task_alt')}</div>
-          <div><h2 id="requirements-title">Risk assessment completed</h2><p>Your ${state.rpqResult} profile and Investment Policy Statement are ready.</p></div>
-        </div>
-        <div class="requirements-complete-list">
-          <div><span>${icon('check_circle')}<strong>Risk Profile Questionnaire</strong><small>${state.rpqResult}</small></span><button class="link-button" type="button" data-action="to-risk-result">Review result</button></div>
-          <div><span>${icon('check_circle')}<strong>Investment Policy Statement</strong><small>Acknowledged</small></span><button class="link-button" type="button" data-action="to-ips">Review IPS</button></div>
+      <section class="requirements-card requirements-picker complete-picker" aria-label="Completed suitability checks">
+        <div class="requirements-grid">
+          <article class="requirement-item complete">
+            <div class="requirement-status"><span>Completed</span></div>
+            <h3>Risk Profile Questionnaire</h3>
+            <p>Assess your current investment profile for the selected target fund.</p>
+            <button class="btn btn-secondary" type="button" data-action="to-risk-result">View Result</button>
+          </article>
+          <article class="requirement-item complete">
+            <div class="requirement-status"><span>Completed</span></div>
+            <h3>Investment Policy Statement</h3>
+            <p>Review and acknowledge the investment policy information associated with your target fund.</p>
+            <button class="btn btn-secondary" type="button" data-action="to-ips">Review IPS</button>
+          </article>
         </div>
       </section>`;
   }
   return `
-    <section class="requirements-card ${allDone ? 'complete' : ''}" aria-labelledby="requirements-title">
-      <div class="requirements-header">
-        <div>${icon(allDone ? 'task_alt' : 'assignment_late')}</div>
-        <div><h2 id="requirements-title">${allDone ? 'Requirements completed' : 'Additional information required'}</h2><p>${allDone ? 'Both suitability checks are complete. You can continue with this fund switch.' : 'Complete both suitability checks before continuing with this fund switch.'}</p></div>
-      </div>
+    <section class="requirements-card requirements-picker" aria-label="Required suitability checks">
       <div class="requirements-grid">
         <article class="requirement-item ${rpqDone ? 'complete' : ''}">
-          <div class="requirement-status">${icon(rpqDone ? 'check_circle' : 'quiz')}<span>${rpqDone ? 'Completed' : 'Required'}</span></div>
+          <div class="requirement-status"><span>${rpqDone ? 'Completed' : 'Required'}</span></div>
           <h3>Risk Profile Questionnaire</h3>
           <p>Assess your current investment profile for the selected target fund.</p>
-          <button class="btn btn-secondary" type="button" data-action="${rpqDone ? 'to-risk-result' : 'to-rpq'}">${rpqDone ? 'Review result' : 'Start questionnaire'}</button>
+          <button class="btn btn-secondary" type="button" data-action="${rpqDone ? 'to-risk-result' : 'to-rpq'}">${rpqDone ? 'Review result' : 'Start Questionnaire'}</button>
         </article>
         <article class="requirement-item ${ipsDone ? 'complete' : ''} ${rpqDone ? '' : 'locked'}">
-          <div class="requirement-status">${icon(ipsDone ? 'check_circle' : rpqDone ? 'description' : 'lock')}<span>${ipsDone ? 'Completed' : rpqDone ? 'Required' : 'Available after RPQ'}</span></div>
+          <div class="requirement-status"><span>${ipsDone ? 'Completed' : 'Required'}</span></div>
           <h3>Investment Policy Statement</h3>
           <p>Review and acknowledge the investment policy information associated with your target fund.</p>
           <button class="btn btn-secondary" type="button" data-action="to-ips" ${rpqDone ? '' : 'disabled'}>${ipsDone ? 'Review completed IPS' : 'Review IPS'}</button>
@@ -427,7 +579,7 @@ function riskRequirementsPanel() {
 }
 
 function switchSummary() {
-  if (!state.sourceId || !state.targetId || !riskGateComplete() || state.fundCheck === 'checking') return '';
+  if (!state.sourceId || !state.targetId || !meetsMinimumSwitch() || !riskGateComplete() || state.fundCheck === 'checking') return '';
   return `
     <section class="switch-summary" aria-label="Fund switch summary">
       <div><span class="review-label">Switch From</span><strong>${selectedSource().name}</strong></div>
@@ -438,8 +590,8 @@ function switchSummary() {
 }
 
 function fundsView() {
-  const body = `${currentPortfolio()}<div class="switch-grid">${sourceCard()}<div class="switch-arrow" aria-hidden="true">${sharpIcon('arrow_forward')}</div>${targetCard()}</div>${riskTriggerBanner()}${riskRequirementsPanel()}${switchSummary()}`;
-  const ready = state.sourceId && state.targetId && riskGateComplete() && state.fundCheck !== 'checking';
+  const body = `${currentPortfolio()}<p class="fund-rules-helper">${icon('info')}<span><strong>Fund switch requirements:</strong> ₱10,000 minimum for Peso funds or US$500 for Dollar funds. Target funds must use the same currency and be available for this product.</span></p><div class="switch-grid">${sourceCard()}<div class="switch-arrow" aria-hidden="true">${sharpIcon('arrow_forward')}</div>${targetCard()}</div>${riskTriggerBanner()}${riskRequirementsPanel()}${switchSummary()}`;
+  const ready = state.sourceId && state.targetId && meetsMinimumSwitch() && riskGateComplete() && state.fundCheck !== 'checking';
   return flowLayout({
     active: 2,
     title: 'Switch your fund',
@@ -456,7 +608,7 @@ function rpqView() {
   const answered = Object.keys(state.rpqAnswers).length;
   const body = `
     <div class="rpq-list">
-      ${rpqQuestions.map((item, questionIndex) => `
+      ${rpqQuestions.map((item) => `
         <fieldset class="question-card">
           <legend>${item.question}</legend>
           <div class="question-options">
@@ -475,8 +627,10 @@ function rpqView() {
     body,
     backAction: 'back-funds',
     nextAction: 'complete-rpq',
-    nextLabel: 'Next',
-    nextDisabled: answered !== rpqQuestions.length,
+    nextLabel: state.rpqSubmitting ? `${icon('progress_activity')} Submitting…` : 'Submit',
+    nextDisabled: answered !== rpqQuestions.length || state.rpqSubmitting,
+    focusMode: true,
+    headerExtra: '<nav class="flow-breadcrumb" aria-label="Breadcrumb"><span>Fund Switch</span><span aria-hidden="true">/</span><span>Suitability check</span><span aria-hidden="true">/</span><strong aria-current="page">Questionnaire</strong></nav>',
   });
 }
 
@@ -485,17 +639,15 @@ function reviewView() {
   const target = selectedTarget();
   const policy = selectedPolicy();
   const body = `
-    <h2 class="review-title">Switch Fund Request</h2>
     <section class="review-section" aria-labelledby="policy-details-title">
       <div class="review-section-header review-policy-header"><h3 id="policy-details-title">Policy details</h3></div>
       <dl class="review-detail-grid">
         <div><dt>Policy Owner</dt><dd>${policy.owner}</dd></div>
         <div><dt>Policy Number</dt><dd>#${policy.id}</dd></div>
-        <div><dt>Current Risk Profile</dt><dd>${state.currentRiskProfile}</dd></div>
       </dl>
     </section>
-    <section class="review-card">
-      <div class="review-card-header review-card-edit-header"><button class="link-button" type="button" data-action="edit-funds">Edit</button></div>
+    <section class="review-card" aria-labelledby="switch-request-title">
+      <div class="review-card-header review-card-edit-header"><h2 id="switch-request-title">Switch Fund Request</h2><button class="link-button" type="button" data-action="edit-funds">Edit</button></div>
       <div class="review-switch">
         <div><div class="review-label">Switch From</div><p class="review-data">${source.name}</p></div>
         ${icon('arrow_forward')}
@@ -505,10 +657,10 @@ function reviewView() {
     </section>
     ${requiresRiskAssessment() ? `<div class="risk-review-row">${icon('verified_user')}<span><strong>Risk assessment complete</strong><br />RPQ result: ${state.rpqResult} · IPS acknowledged · ${target.name} aligned</span><button class="link-button" type="button" data-action="preview-ips">View IPS</button></div>` : ''}
     <section class="review-section review-document" aria-labelledby="fsaf-title">
-      <div class="review-section-header">
-        <div>${icon('description')}<span><h3 id="fsaf-title">Fund Switch Application Form (FSAF)</h3><p>Generated from the details in this request</p></span></div>
+      <div class="review-section-header review-document-label">
+        <h3 id="fsaf-title">ATTACHED DOCUMENTS</h3>
       </div>
-      <div class="review-document-body"><p>Preview the application form before proceeding to your electronic signature.</p><button class="btn btn-secondary" type="button" data-action="preview-document">Preview FSAF</button></div>
+      <div class="review-document-body"><div class="review-document-file">${icon('check_circle')}<span><strong>Fund Switch Application Form (FSAF)</strong><small>fund_switch_application_form.pdf</small></span></div><button class="btn btn-secondary" type="button" data-action="preview-document">Preview FSAF</button></div>
     </section>
     <label class="ack-row"><input id="review-ack" type="checkbox" ${state.acknowledged ? 'checked' : ''}/><span>I confirm that I have reviewed the details above and understood that fund values may fluctuate.</span></label>`;
   return flowLayout({ active: 3, title: 'Review your fund switch', description: 'Before we proceed, please review the details below before signing your request.', body, backAction: 'back-funds', nextAction: 'to-sign', nextLabel: 'Proceed to Sign', nextDisabled: !state.acknowledged });
@@ -536,14 +688,14 @@ function successView() {
 }
 
 function render({ focus = true } = {}) {
-  const views = { services: servicesView, investments: investmentView, requests: requestsView, policy: policyView, funds: fundsView, rpq: rpqView, review: reviewView, success: successView };
+  const views = { services: servicesView, investments: investmentView, requests: requestsView, policy: policyView, funds: fundsView, rpq: rpqView, review: reviewView, success: successView, 'vul-explore': vulExploreView };
   app.innerHTML = views[state.screen]();
   document.querySelectorAll('.main-nav [data-nav]').forEach((button) => {
-    const current = button.dataset.nav === (state.screen === 'investments' ? 'Investments' : 'Services');
+    const current = button.dataset.nav === state.activeNav;
     button.classList.toggle('active', current);
     button.toggleAttribute('aria-current', current);
   });
-  document.title = `${state.screen === 'investments' ? 'Investments' : state.screen === 'services' ? 'Services' : state.screen === 'requests' ? 'My Requests' : state.screen === 'success' ? 'Request Submitted' : 'Fund Switch'} — EastWest Ageas`;
+  document.title = `${state.screen === 'investments' ? 'Investments' : state.screen === 'services' ? 'Services' : state.screen === 'requests' ? 'My Requests' : state.screen === 'success' ? 'Request Submitted' : state.screen === 'vul-explore' ? 'Investment-linked policies' : 'Fund Switch'} — EastWest Ageas`;
   if (state.screen === 'investments') drawInvestmentCharts();
   if (focus) focusPage();
 }
@@ -579,14 +731,16 @@ function drawInvestmentCharts() {
 function calculateRiskResult() {
   const values = Object.values(state.rpqAnswers).map(Number);
   const average = values.reduce((sum, value) => sum + value, 0) / values.length;
-  if (average <= 1.5) return 'Conservative';
-  if (average <= 2.5) return 'Moderate';
+  if (average <= 1.35) return 'Moderately Conservative';
+  if (average <= 2.05) return 'Moderate';
+  if (average <= 2.65) return 'Moderately Aggressive';
   return 'Aggressive';
 }
 
 function riskResultCopy(profile) {
-  if (profile === 'Conservative') return 'Your answers indicate a preference for capital stability and limited market fluctuation.';
+  if (profile === 'Moderately Conservative') return 'Your answers indicate a preference for capital stability and limited market fluctuation.';
   if (profile === 'Moderate') return 'Your answers indicate comfort with some market fluctuation while balancing stability and growth.';
+  if (profile === 'Moderately Aggressive') return 'Your answers indicate comfort with meaningful market fluctuation in pursuit of long-term growth.';
   return 'Your answers indicate comfort with significant market fluctuations in pursuit of long-term growth.';
 }
 
@@ -596,7 +750,7 @@ function riskResultContent() {
   return `
     <section class="result-hero ${aligned ? '' : 'not-aligned'}">
       <span class="result-icon">${icon(aligned ? 'verified' : 'error')}</span>
-      <div><span class="result-tag">YOUR RESULT</span><h2>Your risk profile is ${result}</h2><p>${riskResultCopy(result)}</p></div>
+      <div><h2>Your risk profile is ${result}</h2><p>${riskResultCopy(result)}</p></div>
     </section>
     <section class="risk-comparison" aria-labelledby="modal-comparison-title">
       <h2 id="modal-comparison-title">Suitability check</h2>
@@ -608,9 +762,7 @@ function riskResultContent() {
         <div class="comparison-stage comparison-target"><span class="review-label">Selected target fund</span><strong>${selectedTarget().name}</strong><small>${selectedTarget().risk}</small><span class="alignment-status ${aligned ? '' : 'not-aligned'}">${aligned ? 'Aligned' : 'Not aligned'}</span></div>
       </div>
     </section>
-    ${aligned
-      ? sectionMessage({ type: 'info', iconName: 'description', title: 'Next: Review your Investment Policy Statement', text: 'The IPS records your risk profile, investment objective, and selected fund before you continue.', className: 'modal-message' })
-      : sectionMessage({ type: 'warning', iconName: 'warning', title: 'Choose a fund that matches your result', text: `${selectedTarget().name} is above the ${result} risk level. You can review your answers or return to the fund list.`, className: 'modal-message' })}`;
+    ${aligned ? '' : sectionMessage({ type: 'warning', iconName: 'warning', title: 'Choose a fund that matches your result', text: `${selectedTarget().name} is above the ${result} risk level. You can review your answers or return to the fund list.`, className: 'modal-message' })}`;
 }
 
 function openRiskResultModal() {
@@ -621,7 +773,7 @@ function openRiskResultModal() {
   dialogRoot.innerHTML = `
     <div class="modal-backdrop assessment-backdrop">
       <section class="modal assessment-modal" role="dialog" aria-modal="true" aria-labelledby="risk-result-title">
-        <div class="modal-header"><div><h2 id="risk-result-title">Your risk profile result</h2><p>Review how your result compares with your selected fund.</p></div><button class="icon-button" type="button" data-action="back-to-rpq" aria-label="Close result">${icon('close')}</button></div>
+        <div class="modal-header"><div><h2 id="risk-result-title">Your risk profile result</h2><p>${aligned ? 'Review your updated profile below. Next, review and acknowledge your Investment Policy Statement.' : 'Review your updated profile and how it compares with your selected fund.'}</p></div><button class="icon-button" type="button" data-action="back-to-rpq" aria-label="Close result">${icon('close')}</button></div>
         ${riskResultContent()}
         <footer class="modal-actions"><button class="btn btn-secondary" type="button" data-action="back-to-rpq">${aligned ? 'Back to answers' : 'Review answers'}</button><div class="modal-action-group"><button class="btn btn-draft" type="button" data-action="save-draft">Save as Draft</button><button class="btn btn-primary" type="button" data-action="${aligned ? 'to-ips-modal' : 'choose-another-fund'}">${aligned ? 'Review IPS' : 'Choose another fund'}</button></div></footer>
       </section>
@@ -724,7 +876,7 @@ function openSignatureModal() {
 }
 
 function openSaveDraftModal() {
-  if (!state.targetId) return;
+  if (!state.policyId) return;
   if (dialogRoot.querySelector('.signature-modal')) draftReturnContext = 'signature';
   else if (dialogRoot.querySelector('.ips-modal')) draftReturnContext = 'ips';
   else if (dialogRoot.querySelector('.assessment-modal')) draftReturnContext = 'result';
@@ -749,6 +901,7 @@ function restoreDraftReturnContext() {
 
 function confirmSaveDraft() {
   state.requestStatus = 'Draft';
+  state.requestPolicyId = state.policyId;
   state.draftResumeScreen = state.screen;
   state.draftResumeModal = draftReturnContext === 'page' ? '' : draftReturnContext;
   state.screen = 'services';
@@ -777,6 +930,7 @@ function submitSignature() {
   submissionTimer = window.setTimeout(() => {
     state.submitting = false;
     state.requestStatus = 'Submitted';
+    state.requestPolicyId = state.policyId;
     closeModal();
     state.screen = 'success';
     render();
@@ -810,7 +964,10 @@ function openIpsPreview() {
 
 function openFundDetails() {
   const fund = selectedTarget();
-  const details = fundDetails[fund.id];
+  const details = fundDetails[fund.id] || {
+    objective: `${fund.name} is an available ${fund.currency} fund for this policy product, subject to its stated risk classification.`,
+    horizon: fund.riskScore >= 9 ? '5 years or more' : '3 - 5 years or more',
+  };
   const category = details.category || fund.type;
   dialogRoot.innerHTML = `
     <div class="drawer-backdrop">
@@ -818,39 +975,94 @@ function openFundDetails() {
         <header class="drawer-header">
           <button class="icon-button drawer-close" type="button" data-action="close-drawer" aria-label="Close fund details">${icon('close')}</button>
           <h2 id="fund-drawer-title">${fund.name}</h2>
-          <p class="drawer-subtitle">${fund.risk} <span aria-hidden="true">|</span> ${category}</p>
-          <p>${details.description}</p>
+          <div class="drawer-tags"><span>${fund.risk}</span><span>${category}</span></div>
+          <p class="drawer-summary">${details.objective}</p>
         </header>
         <div class="drawer-content">
-          <section class="fund-highlights" aria-label="Fund characteristics">
-            <div class="fund-highlight">${icon('signal_cellular_3_bar')}<div><strong>Risk Level (${fund.risk.replace(' Risk', '')})</strong><span>This fund is suitable for investors with a ${fund.risk.replace(' Risk', '').toLowerCase()} risk tolerance.</span></div></div>
-            <div class="fund-highlight">${icon('strategy')}<div><strong>Investment Objective</strong><span>${details.objective}</span></div></div>
-            <div class="fund-highlight">${icon('pie_chart')}<div><strong>Asset Type</strong><span>${fund.type}</span></div></div>
-            <div class="fund-highlight">${icon('calendar_month')}<div><strong>Recommendation Investment Horizon (${details.horizonLabel})</strong><span>${details.horizon}</span></div></div>
+          <section class="fund-key-facts" aria-labelledby="fund-key-facts-title">
+            <h3 id="fund-key-facts-title">At a glance</h3>
+            <div class="fund-key-fact"><span>Risk level</span><strong>${fund.risk.replace(' Risk', '')}</strong></div>
+            <div class="fund-key-fact"><span>Asset type</span><strong>${fund.type}</strong></div>
+            <div class="fund-key-fact"><span>Recommended horizon</span><strong>${details.horizon}</strong></div>
           </section>
-          <section class="fund-detail-table" aria-labelledby="fund-detail-table-title">
-            <h3 id="fund-detail-table-title">Fund Details</h3>
-            <dl>
-              <div><dt>Fund launch date</dt><dd>${details.launchDate}</dd></div>
-              <div><dt>Fund currency</dt><dd>Philippines Peso (PHP)</dd></div>
-              <div><dt>Minimum initial investment</dt><dd>PHP 5,000.00</dd></div>
-              <div><dt>Minimum additional investment</dt><dd>PHP 1,000.00</dd></div>
-              <div><dt>Minimum maintaining balance</dt><dd>PHP 5,000.00</dd></div>
-              <div><dt>Early redemption charge</dt><dd>1.00% if redeemed within 30 days</dd></div>
-            </dl>
-          </section>
-          ${sectionMessage({ type: 'info', iconName: 'info', text: 'Fund values may go up or down depending on market performance. Past performance is not indicative of future results.', className: 'drawer-info' })}
+          <p class="drawer-disclaimer">Fund values may rise or fall. Past performance does not guarantee future results.</p>
+          <a class="drawer-all-funds" href="investments.html" target="_blank" rel="noopener noreferrer">Explore all investment funds ${icon('open_in_new')}</a>
         </div>
-        <footer class="drawer-footer"><button class="btn btn-primary" type="button" data-action="close-drawer">Close</button><button class="btn btn-secondary" type="button" data-action="fund-factsheet">View fund factsheet</button></footer>
+        <footer class="drawer-footer"><button class="btn btn-primary" type="button" data-action="fund-factsheet">View fund factsheet</button></footer>
       </aside>
     </div>`;
   document.body.classList.add('drawer-open');
   dialogRoot.querySelector('.fund-drawer').focus({ preventScroll: true });
 }
 
+function factsheetFile(fund) {
+  return {
+    balanced: 'output/pdf/peso-balanced-fund-factsheet.pdf',
+    bond: 'output/pdf/peso-bond-fund-factsheet.pdf',
+    equity: 'output/pdf/peso-equity-fund-factsheet.pdf',
+  }[fund.id];
+}
+
+function openFundFactsheet() {
+  const fund = selectedTarget();
+  const source = factsheetFile(fund);
+  if (!source) return showToast('A factsheet is not available for this fund yet.');
+  dialogRoot.insertAdjacentHTML('beforeend', `
+    <div class="factsheet-backdrop" role="presentation">
+      <section class="factsheet-modal" role="dialog" aria-modal="true" aria-labelledby="factsheet-title" tabindex="-1">
+        <header class="factsheet-toolbar">
+          <h2 id="factsheet-title">${fund.name} fact sheet</h2>
+          <div class="factsheet-toolbar-actions">
+            <span class="factsheet-page-count" aria-label="Page 1 of 1">Page <strong>1</strong> / 1</span>
+            <a class="icon-button" href="${source}" target="_blank" rel="noopener noreferrer" aria-label="Open ${fund.name} fact sheet in a new tab">${icon('open_in_new')}</a>
+            <button class="icon-button factsheet-close" type="button" data-action="close-factsheet" aria-label="Close fact sheet">${icon('close')}</button>
+          </div>
+        </header>
+        <div class="factsheet-document"><iframe src="${source}#toolbar=0&navpanes=0" title="${fund.name} Fund Fact Sheet"></iframe></div>
+      </section>
+    </div>`);
+  document.body.classList.add('factsheet-open');
+  dialogRoot.querySelector('.factsheet-modal').focus({ preventScroll: true });
+}
+
+function closeFundFactsheet() {
+  dialogRoot.querySelector('.factsheet-backdrop')?.remove();
+  document.body.classList.remove('factsheet-open');
+  dialogRoot.querySelector('.fund-drawer')?.focus({ preventScroll: true });
+}
+
 function closeModal() {
   dialogRoot.innerHTML = '';
-  document.body.classList.remove('drawer-open');
+  document.body.classList.remove('drawer-open', 'factsheet-open');
+}
+
+function openNonVulPolicyModal() {
+  const policy = selectedPolicy();
+  if (!policy || policy.fundSwitchEligible) return;
+  dialogRoot.innerHTML = `
+    <div class="modal-backdrop">
+      <section class="modal eligibility-modal" role="dialog" aria-modal="true" aria-labelledby="eligibility-title" tabindex="-1">
+        <div class="modal-header"><div class="eligibility-title"><span class="eligibility-icon">${icon('policy')}</span><h2 id="eligibility-title">Fund Switch isn’t available for this policy</h2></div><button class="icon-button" type="button" data-action="choose-another-policy" aria-label="Close and choose another policy">${icon('close')}</button></div>
+        <p><strong>Dream Builder</strong> is a traditional life policy, so it doesn’t have investment funds to switch.</p>
+        <div class="section-message eligibility-guidance"><span>${icon('lightbulb')}</span><div><span>You can explore VUL products without changing your current policy or starting an application.</span></div></div>
+        <footer class="modal-actions"><button class="btn btn-secondary" type="button" data-action="close-non-vul-modal">Cancel</button><button class="btn btn-primary" type="button" data-action="explore-vul-policies">Explore VUL products</button></footer>
+      </section>
+    </div>`;
+  dialogRoot.querySelector('.eligibility-modal').focus({ preventScroll: true });
+}
+
+function openPendingRequestModal(policyId) {
+  const policy = policies.find((item) => item.id === policyId && item.pendingRequest);
+  if (!policy) return;
+  dialogRoot.innerHTML = `
+    <div class="modal-backdrop">
+      <section class="modal eligibility-modal" role="dialog" aria-modal="true" aria-labelledby="pending-request-title" tabindex="-1">
+        <div class="modal-header"><div class="eligibility-title"><span class="eligibility-icon pending-request-icon">${icon('hourglass_bottom')}</span><h2 id="pending-request-title">Existing Fund Switch Request in Progress</h2></div><button class="icon-button" type="button" data-action="close-pending-request" aria-label="Close pending request notice">${icon('close')}</button></div>
+        <p>A Fund Switch request for <strong>${policy.product} #${policy.id}</strong> is currently in progress. You can track its status in My Requests and submit a new request once processing is complete.</p>
+        <footer class="modal-actions"><button class="btn btn-primary" type="button" data-action="close-pending-request">Got it</button></footer>
+      </section>
+    </div>`;
+  dialogRoot.querySelector('.eligibility-modal').focus({ preventScroll: true });
 }
 
 function closeFundDrawer() {
@@ -861,8 +1073,12 @@ function closeFundDrawer() {
 }
 
 function setSourceFund(value) {
+  const changed = state.sourceId !== value;
   state.sourceId = value;
-  if (state.targetId === state.sourceId) { state.targetId = ''; state.fundCheck = 'idle'; }
+  if (changed) {
+    state.targetId = '';
+    resetSuitability();
+  }
   render({ focus: false });
 }
 
@@ -871,12 +1087,7 @@ function setTargetFund(value) {
   const changed = state.targetId !== value;
   state.targetId = value;
   if (changed) {
-    state.rpqAnswers = {};
-    state.rpqComplete = false;
-    state.rpqResult = '';
-    state.ipsAcknowledged = false;
-    state.ipsAccepted = false;
-    state.assessmentStage = '';
+    resetSuitability();
   }
   state.fundCheck = requiresRiskAssessment() ? 'checking' : 'complete';
   render({ focus: false });
@@ -890,7 +1101,12 @@ function setTargetFund(value) {
 
 document.addEventListener('change', (event) => {
   const target = event.target;
-  if (target.name === 'policy') { state.policyId = target.value; render({ focus: false }); }
+  if (target.name === 'policy') {
+    state.policyId = target.value;
+    state.sourceId = '';
+    state.targetId = '';
+    render({ focus: false });
+  }
   if (target.name && target.name.startsWith('rpq-')) {
     state.rpqAnswers[target.name.replace('rpq-', '')] = target.value;
     render({ focus: false });
@@ -914,8 +1130,10 @@ document.addEventListener('click', (event) => {
 
   const nav = event.target.closest('[data-nav]');
   if (nav) {
+    state.activeNav = nav.dataset.nav;
     if (nav.dataset.nav === 'Investments') { state.screen = 'investments'; render(); return; }
     if (nav.dataset.nav === 'Services') { state.screen = 'services'; render(); return; }
+    render({ focus: false });
     showToast(`${nav.dataset.nav} is outside this prototype.`);
     return;
   }
@@ -952,19 +1170,48 @@ document.addEventListener('click', (event) => {
     openSignatureModal();
     return;
   }
-  if (action === 'restart') { clearTimeout(submissionTimer); state.screen = 'services'; closeModal(); render(); }
-  if (action === 'start-policy-fund-switch') { state.policyId = control.dataset.policyId; state.sourceId = control.dataset.sourceId; state.screen = 'funds'; render(); }
+  if (action === 'restart') { clearTimeout(submissionTimer); clearTimeout(rpqTimer); state.screen = 'services'; state.activeNav = 'Services'; closeModal(); render(); }
+  if (action === 'start-policy-fund-switch') {
+    state.policyId = control.dataset.policyId;
+    state.sourceId = control.dataset.sourceId;
+    state.targetId = '';
+    resetSuitability();
+    state.screen = 'funds';
+    render();
+  }
   if (action === 'toggle-policy-breakdown') { state.investmentExpandedPolicyId = state.investmentExpandedPolicyId === control.dataset.policyId ? '' : control.dataset.policyId; render({ focus: false }); }
   if (action === 'toolkit-info') showToast('This toolkit item is outside this Fund Switch demo.');
   if (action === 'risk-profile-info') showToast('Your current risk profile is Moderate.');
-  if (action === 'back-services') { state.screen = 'services'; render(); }
+  if (action === 'back-services') { state.screen = 'services'; state.activeNav = 'Services'; render(); }
   if (action === 'open-policy-requests') { state.screen = 'requests'; render(); }
+  if (action === 'toggle-request-details') { state.requestExpanded = !state.requestExpanded; render({ focus: false }); }
   if (action === 'resume-request') resumeSavedRequest();
-  if (action === 'to-funds') { state.screen = 'funds'; render(); }
+  if (action === 'pending-policy-info') openPendingRequestModal(control.dataset.policyId);
+  if (action === 'to-funds') {
+    if (!selectedPolicy()?.fundSwitchEligible) return openNonVulPolicyModal();
+    state.screen = 'funds';
+    render();
+  }
+  if (action === 'close-pending-request') closeModal();
+  if (action === 'choose-another-policy' || action === 'back-to-policy-selection') { state.policyId = ''; closeModal(); state.screen = 'policy'; state.activeNav = 'Services'; render(); }
+  if (action === 'close-non-vul-modal') { closeModal(); }
+  if (action === 'explore-vul-policies') { closeModal(); showToast('Destination to be confirmed.'); }
+  if (action === 'request-vul-consultation') { state.vulConsultationRequested = true; render(); }
   if (action === 'back-policy') { state.screen = 'policy'; render(); }
   if (action === 'to-rpq') { state.screen = 'rpq'; state.assessmentStage = ''; render(); }
   if (action === 'to-risk-result') openRiskResultModal();
-  if (action === 'complete-rpq') { state.rpqComplete = true; state.rpqResult = calculateRiskResult(); state.ipsAccepted = false; openRiskResultModal(); }
+  if (action === 'complete-rpq') {
+    state.rpqSubmitting = true;
+    render({ focus: false });
+    clearTimeout(rpqTimer);
+    rpqTimer = window.setTimeout(() => {
+      state.rpqSubmitting = false;
+      state.rpqComplete = true;
+      state.rpqResult = calculateRiskResult();
+      state.ipsAccepted = false;
+      openRiskResultModal();
+    }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 250 : 900);
+  }
   if (action === 'back-rpq') { state.screen = 'rpq'; render(); }
   if (action === 'to-ips') openIpsModal();
   if (action === 'to-ips-modal') openIpsModal();
@@ -990,7 +1237,8 @@ document.addEventListener('click', (event) => {
   if (action === 'signature-next') submitSignature();
   if (action === 'fund-details') openFundDetails();
   if (action === 'close-drawer') closeFundDrawer();
-  if (action === 'fund-factsheet') showToast(`${selectedTarget().name} factsheet would open in a new tab in production.`);
+  if (action === 'fund-factsheet') openFundFactsheet();
+  if (action === 'close-factsheet') closeFundFactsheet();
   if (action === 'my-requests') { state.screen = 'requests'; render(); }
 });
 
@@ -1002,6 +1250,7 @@ document.addEventListener('keydown', (event) => {
     return;
   }
   if (event.key === 'Escape' && dialogRoot.querySelector('.draft-modal')) restoreDraftReturnContext();
+  else if (event.key === 'Escape' && dialogRoot.querySelector('.factsheet-backdrop')) closeFundFactsheet();
   else if (event.key === 'Escape' && dialogRoot.querySelector('.drawer-backdrop')) closeFundDrawer();
   else if (event.key === 'Escape' && dialogRoot.innerHTML) closeModal();
 });

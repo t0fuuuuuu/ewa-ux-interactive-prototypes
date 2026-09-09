@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0;20..48,400,1,0&family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@20..48,400,1,0&family=Montserrat:wght@700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=4" />
   </head>
   <body>
     <header class="main-nav">
@@ -22,7 +22,7 @@
         <button type="button" data-nav="Documents">Documents</button>
         <button type="button" data-nav="Payments">Payments</button>
         <button type="button" data-nav="Investments">Investments</button>
-        <button class="active" type="button" data-action="restart" aria-current="page">Services</button>
+        <button class="active" type="button" data-nav="Services" aria-current="page">Services</button>
       </nav>
       <button class="profile" type="button" data-nav="Profile" aria-label="Open Elizabeth G.'s profile">
         <img src="assets/figma-main-nav-user.svg" alt="" />
@@ -34,6 +34,6 @@
     <main id="app" tabindex="-1"></main>
     <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
     <div id="dialog-root"></div>
-    <script src="app.js"></script>
+    <script src="app.js?v=4"></script>
   </body>
 </html>
