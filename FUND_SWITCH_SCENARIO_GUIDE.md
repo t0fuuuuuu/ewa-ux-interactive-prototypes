@@ -4,7 +4,7 @@ Prototype: http://fund-switch.localhost:4173/?v=4
 
 Use this guide from **Services → Fund Switch**. The sample policies below are intentionally configured to demonstrate the business rules and boundary cases in the prototype.
 
-## Reviewer walkthrough for BA and PM
+## Fund Switch walkthrough
 
 1. Open the prototype and choose **Services → Fund Switch**.
 2. On **Select Policy**, choose the policy number listed in the scenario you want to review. Use the policy number, not only the product name, because several fixtures share the same product.
@@ -16,6 +16,19 @@ Use this guide from **Services → Fund Switch**. The sample policies below are 
 8. Use **Continue** only after the source, target, minimum amount, and any required suitability checks are complete.
 9. Use **Save as Draft** at any point to verify draft creation and resume behavior from **My Requests**.
 10. Return to **Services → Fund Switch** between scenarios so the next test starts from policy selection.
+
+## Investments walkthrough
+
+Use this path when reviewing how Fund Switch can be discovered from **Investments**:
+
+1. Open the prototype and choose **Investments** from the main navigation.
+2. Under **My Investment Policies**, choose **Show Fund Breakdown** for the policy you want to review. Policy cards are collapsed when the page first opens.
+3. Review the policy's payout option, total fund value, current funds, NAVPU, units, allocation, and individual fund values.
+4. Choose **Switch fund** beside a current holding. The Fund Switch journey opens with that policy and source fund already selected.
+5. Select an eligible target fund. Confirm that the available targets follow the selected policy's product and currency rules.
+6. Complete the minimum-amount and suitability paths described in the scenarios below, then continue to review and submit.
+7. To explore funds without starting or changing a request, review **Available Funds** on the Investments page and switch between the performance periods.
+8. From a target fund's details drawer in Fund Switch, choose **Explore all investment funds** to open the public investment-funds page in a new tab. This route is exploratory and does not submit or modify the Fund Switch request.
 
 ### Recommended review order
 
@@ -29,7 +42,7 @@ For a quick end-to-end review, use this order:
 6. `810000090307` — pending-request modal.
 7. `810000089312`, `810000087920`, and `810000088405` — Non-VUL, lapsed, and terminated policy handling.
 
-When documenting results, record the policy number, source fund, target fund, whether RPQ/IPS appeared, and whether Continue was enabled. This makes each BA/PM observation traceable to one business rule.
+When documenting results, record the policy number, source fund, target fund, whether RPQ/IPS appeared, and whether Continue was enabled. This makes each observation traceable to one business rule.
 
 ## Quick navigation
 
