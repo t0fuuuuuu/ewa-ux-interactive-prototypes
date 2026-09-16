@@ -1,6 +1,45 @@
 const app = document.querySelector('#app');
 const toast = document.querySelector('#toast');
 const dialogRoot = document.querySelector('#dialog-root');
+const mobileNav = document.querySelector('#mobile-navigation');
+const mobileMenuButton = document.querySelector('[data-action="open-mobile-nav"]');
+const scenarioGuideButton = document.querySelector('.scenario-guide-fab');
+const mainNav = document.querySelector('.main-nav');
+let mobileNavReturnFocus = null;
+
+function syncDialogScrollLock() {
+  const hasBlockingDialog = Boolean(dialogRoot.querySelector('.modal-backdrop, .drawer-backdrop, .factsheet-backdrop'));
+  document.body.classList.toggle('dialog-open', hasBlockingDialog);
+}
+
+const dialogObserver = new MutationObserver(syncDialogScrollLock);
+dialogObserver.observe(dialogRoot, { childList: true });
+
+function openMobileNav() {
+  mobileNavReturnFocus = document.activeElement;
+  mobileNav.hidden = false;
+  document.body.classList.add('mobile-nav-open');
+  mainNav.inert = true;
+  app.inert = true;
+  toast.inert = true;
+  dialogRoot.inert = true;
+  scenarioGuideButton.inert = true;
+  mobileMenuButton.setAttribute('aria-expanded', 'true');
+  mobileNav.querySelector('.mobile-nav-panel').focus({ preventScroll: true });
+}
+
+function closeMobileNav({ restoreFocus = true } = {}) {
+  if (mobileNav.hidden) return;
+  mobileNav.hidden = true;
+  document.body.classList.remove('mobile-nav-open');
+  mainNav.inert = false;
+  app.inert = false;
+  toast.inert = false;
+  dialogRoot.inert = false;
+  scenarioGuideButton.inert = false;
+  mobileMenuButton.setAttribute('aria-expanded', 'false');
+  if (restoreFocus && mobileNavReturnFocus instanceof HTMLElement) mobileNavReturnFocus.focus({ preventScroll: true });
+}
 
 const productFundMatrix = {
   'future-assure-max-sp-peso': ['bond', 'balanced', 'high-dividend', 'active-equity', 'asian-equity', 'peso-global-esg', 'global-reit'],
@@ -157,6 +196,8 @@ const initialState = () => ({
   investmentPeriod: '1 Year',
   investmentExpandedPolicyId: '',
   requestExpanded: false,
+  prototypeScenarioId: '',
+  scenarioPolicyId: '',
   policyId: '',
   sourceId: '',
   targetId: '',
@@ -190,6 +231,79 @@ let fundCheckTimer;
 let submissionTimer;
 let rpqTimer;
 let draftReturnContext = 'page';
+
+const prototypeScenarios = [
+  {
+    id: 'standard-peso',
+    category: 'Fund switching',
+    title: 'Standard Peso Fund Switch',
+    description: 'Eligible Peso policy, above minimum, switching to a lower-risk fund with no RPQ or IPS.',
+    state: { screen: 'funds', policyId: '810000085627', sourceId: 'balanced', targetId: 'bond', fundCheck: 'complete' },
+  },
+  {
+    id: 'higher-risk-peso',
+    category: 'Fund switching',
+    title: 'Higher-Risk Peso Target',
+    description: 'Shows the RPQ and IPS requirements when the selected target is riskier than the source fund.',
+    state: { screen: 'funds', policyId: '810000085627', sourceId: 'balanced', targetId: 'high-dividend', fundCheck: 'complete' },
+  },
+  {
+    id: 'exact-minimum-peso',
+    category: 'Fund switching',
+    title: 'Peso Fund at Exact Minimum',
+    description: 'A ₱10,000 source fund passes the minimum rule and enables the target-fund selection.',
+    requiresPolicySelection: true,
+    state: { screen: 'funds', policyId: '810000090304', sourceId: 'bond', fundCheck: 'complete' },
+  },
+  {
+    id: 'below-minimum-peso',
+    category: 'Fund switching',
+    title: 'Peso Fund Below Minimum',
+    description: 'A ₱9,999.99 source fund is blocked and its target-fund selection stays unavailable.',
+    requiresPolicySelection: true,
+    state: { screen: 'funds', policyId: '810000090303', sourceId: 'bond', fundCheck: 'complete' },
+  },
+  {
+    id: 'dollar-same-risk',
+    category: 'Fund switching',
+    title: 'Dollar-to-Dollar, Same Risk',
+    description: 'Both funds are Aggressive, so the switch can continue without triggering the RPQ or IPS.',
+    requiresPolicySelection: true,
+    state: { screen: 'funds', policyId: '810000090305', sourceId: 'dollar-income', targetId: 'dollar-esg', fundCheck: 'complete' },
+  },
+  {
+    id: 'below-minimum-dollar',
+    category: 'Fund switching',
+    title: 'Dollar Fund Below Minimum',
+    description: 'A US$499.99 source fund is blocked by the US$500 minimum rule.',
+    requiresPolicySelection: true,
+    state: { screen: 'funds', policyId: '810000090306', sourceId: 'dollar-income', fundCheck: 'complete' },
+  },
+  {
+    id: 'product-specific-funds',
+    category: 'Fund switching',
+    title: 'Product-Specific Fund Availability',
+    description: 'The 3-Pay Peso policy exposes its own allowed target list, including Global Strategic Payout Fund.',
+    requiresPolicySelection: true,
+    state: { screen: 'funds', policyId: '810000090302', sourceId: 'bond', fundCheck: 'complete' },
+  },
+  {
+    id: 'pending-request',
+    category: 'Policy eligibility',
+    title: 'Pending Request Restriction',
+    description: 'Shows the blocking message for a policy that already has a Fund Switch request in progress.',
+    requiresPolicySelection: true,
+    state: { screen: 'policy', policyId: '810000090307' },
+  },
+  {
+    id: 'traditional-policy',
+    category: 'Policy eligibility',
+    title: 'Traditional Policy Not Eligible',
+    description: 'Explains why a traditional life policy has no investment funds available to switch.',
+    requiresPolicySelection: true,
+    state: { screen: 'policy', policyId: '810000089312' },
+  },
+];
 
 function money(value, currency = selectedPolicy()?.currency || 'PHP') {
   return new Intl.NumberFormat('en-PH', { style: 'currency', currency, currencyDisplay: currency === 'USD' ? 'code' : 'symbol', maximumFractionDigits: 2 }).format(value || 0);
@@ -276,6 +390,71 @@ function sectionMessage({ type = 'info', iconName = 'info', title = '', text, cl
 function statusTag(label) {
   const className = label.toLowerCase().replace(/\s+/g, '-');
   return `<span class="status-tag status-${className}">${label}</span>`;
+}
+
+function fundRiskTag(fund) {
+  const danger = fund.riskScore >= 7;
+  return `<span class="fund-risk-tag ${danger ? 'danger' : 'standard'}">${danger ? icon('info') : ''}<span>${fund.risk}</span></span>`;
+}
+
+function setScenarioUrl(scenarioId = '') {
+  const url = new URL(window.location.href);
+  if (scenarioId) url.searchParams.set('scenario', scenarioId);
+  else url.searchParams.delete('scenario');
+  window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
+function scenarioListMarkup() {
+  return prototypeScenarios.map((scenario) => `<button class="scenario-link" type="button" data-action="load-prototype-scenario" data-scenario-id="${scenario.id}" data-search-text="${scenario.title.toLowerCase()}"><strong>${scenario.title}</strong>${icon('arrow_outward')}</button>`).join('');
+}
+
+function closeScenarioGuide({ restoreFocus = true } = {}) {
+  dialogRoot.querySelector('.scenario-guide-popover')?.remove();
+  scenarioGuideButton.setAttribute('aria-expanded', 'false');
+  if (restoreFocus) scenarioGuideButton.focus({ preventScroll: true });
+}
+
+function openScenarioGuide() {
+  dialogRoot.innerHTML = `
+    <section id="scenario-guide-popover" class="scenario-guide-popover" role="dialog" aria-labelledby="scenario-guide-title" tabindex="-1">
+      <header class="scenario-guide-header">
+        <h2 id="scenario-guide-title">Prototype Scenario Guide</h2>
+        <button class="icon-button" type="button" data-action="close-scenario-guide" aria-label="Close prototype scenario guide">${icon('close')}</button>
+      </header>
+      <p class="scenario-guide-intro">Choose a scenario to jump directly to its test state. This guide is not part of the customer experience.</p>
+      <label class="scenario-search" for="scenario-search">
+        <span class="visually-hidden">Search prototype scenarios</span>
+        <span class="scenario-search-control">${icon('search')}<input id="scenario-search" type="search" placeholder="Search scenarios..." autocomplete="off" /></span>
+      </label>
+      <div class="scenario-list" aria-label="Prototype scenarios">
+        ${scenarioListMarkup()}
+        <p class="scenario-empty" role="status" hidden>No scenarios match your search.</p>
+      </div>
+    </section>`;
+  scenarioGuideButton.setAttribute('aria-expanded', 'true');
+  requestAnimationFrame(() => dialogRoot.querySelector('.scenario-guide-popover')?.focus({ preventScroll: true }));
+}
+
+function launchPrototypeScenario(scenarioId, { updateUrl = true } = {}) {
+  const scenario = prototypeScenarios.find((item) => item.id === scenarioId);
+  if (!scenario) return false;
+  clearTimeout(fundCheckTimer);
+  clearTimeout(rpqTimer);
+  clearTimeout(submissionTimer);
+  const scenarioState = { ...scenario.state };
+  if (scenario.requiresPolicySelection) {
+    scenarioState.scenarioPolicyId = scenario.state.policyId;
+    scenarioState.screen = 'policy';
+    scenarioState.policyId = '';
+    scenarioState.sourceId = '';
+    scenarioState.targetId = '';
+    scenarioState.fundCheck = 'idle';
+  }
+  state = { ...initialState(), activeNav: 'Services', prototypeScenarioId: scenario.id, ...scenarioState };
+  closeModal();
+  if (updateUrl) setScenarioUrl(scenario.id);
+  render();
+  return true;
 }
 
 function steps(active) {
@@ -391,7 +570,7 @@ function requestsView() {
         <p>See all service requests linked to this policy. You can check progress, review details, or continue ongoing requests.</p>
       </header>
       <div class="policy-requests-body">
-        ${expanded ? '<div class="request-date">As of September 3, 2026</div>' : ''}
+        <div class="request-date">As of September 3, 2026</div>
         <article class="request-card ${expanded ? 'expanded' : ''}">
           <button class="request-card-toggle" type="button" data-action="${isDraft ? 'resume-request' : 'toggle-request-details'}" ${isDraft ? '' : `aria-expanded="${expanded}"`}>
             <span class="request-card-copy"><span class="request-card-title">Fund Switch Request ${statusTag(state.requestStatus)}</span><small>${policy.product} #${policy.id}</small></span>
@@ -408,12 +587,12 @@ function requestsView() {
     </section>`;
 }
 
-function flowLayout({ active, title, description, body, backAction, nextAction, nextLabel = 'Next', nextDisabled = false, extraFooter = '', focusMode = false, headerExtra = '' }) {
+function flowLayout({ active, title, description, body, backAction, nextAction, nextLabel = 'Next', nextDisabled = false, extraFooter = '', focusMode = false, headerExtra = '', allowOverflow = false }) {
   const saveDraft = state.policyId && active >= 1 ? '<button class="btn btn-draft" type="button" data-action="save-draft">Save as Draft</button>' : '';
   return `
     <section class="flow-shell ${focusMode ? 'focus-mode' : ''}">
       ${focusMode ? '' : steps(active)}
-      <section class="flow-panel" aria-labelledby="flow-title">
+      <section class="flow-panel ${allowOverflow ? 'allow-overflow' : ''}" aria-labelledby="flow-title">
         <header class="flow-header">${headerExtra}<h1 id="flow-title">${title}</h1><p>${description}</p></header>
         <div class="flow-body">${body}</div>
         <footer class="flow-footer">
@@ -448,11 +627,15 @@ function policyOption(policy) {
 }
 
 function policyView() {
+  const mainPolicyIds = ['810000085627', '810000086143', '810000087920', '810000088405'];
+  let visiblePolicies = policies.filter((policy) => mainPolicyIds.includes(policy.id));
+  if (state.scenarioPolicyId) visiblePolicies = policies.filter((policy) => policy.id === state.scenarioPolicyId);
+  const availablePolicies = visiblePolicies.filter((policy) => policy.selectable !== false || policy.pendingRequest);
+  const otherPolicies = visiblePolicies.filter((policy) => policy.selectable === false && !policy.pendingRequest);
   const body = `
     <div class="policy-list">
-      ${policies.filter((p) => p.selectable !== false || p.pendingRequest).map(policyOption).join('')}
-      <p class="policy-group-title">Other Policies</p>
-      ${policies.filter((p) => p.selectable === false && !p.pendingRequest).map(policyOption).join('')}
+      ${availablePolicies.map(policyOption).join('')}
+      ${otherPolicies.length ? `<p class="policy-group-title">Other Policies</p>${otherPolicies.map(policyOption).join('')}` : ''}
     </div>`;
   return flowLayout({ active: 1, title: 'Select Policy', description: 'Choose the policy you want to make fund switch for.', body, backAction: 'back-services', nextAction: 'to-funds', nextDisabled: !state.policyId });
 }
@@ -488,9 +671,14 @@ function sourceCard() {
   const minimum = minimumSwitchAmount();
   return `
     <section class="fund-card">
+      <div class="fund-step-heading">
+        <span class="fund-step-number" aria-hidden="true">1</span>
+        <span><strong>Choose fund to switch from</strong><small>Select the fund you want to move money from.</small></span>
+      </div>
       <div class="fund-card-copy"><div class="eyebrow">SWITCH FROM</div><h2>${source ? source.name : 'Select a source fund'}</h2>
       ${source ? `<p>Current allocation: ${source.allocation}%</p><div class="fund-value">${money(source.value)}</div><p>Current fund value</p>` : '<p>Choose where your current fund will be switched from.</p>'}</div>
       ${selectField({ id: 'source-fund', label: 'Source fund', value: state.sourceId, placeholder: 'Choose a fund', options: fundOptions('source') })}
+      ${source ? `<p class="fund-mobile-meta"><strong>${money(source.value)}</strong> available <span aria-hidden="true">·</span> ${source.allocation}% allocation</p>` : ''}
       <div class="fund-card-action">${belowMinimum ? `<div class="field-error" role="alert">${icon('error')}<span>This fund is below the ${money(minimum)} minimum switch amount.</span></div>` : ''}</div>
     </section>`;
 }
@@ -500,9 +688,14 @@ function targetCard() {
   const disabled = !state.sourceId || !meetsMinimumSwitch();
   return `
     <section class="fund-card ${disabled ? 'disabled' : ''}">
+      <div class="fund-step-heading">
+        <span class="fund-step-number" aria-hidden="true">2</span>
+        <span><strong>Choose destination fund</strong><small>Select the fund you want to move your money to.</small></span>
+      </div>
       <div class="fund-card-copy"><div class="eyebrow">SWITCH TO</div><h2>${target ? target.name : 'Select a target fund'}</h2>
-      ${target ? `<p>${target.type} · <span class="risk-label ${target.riskScore >= 7 ? 'aggressive' : ''}">${target.risk}</span></p><div class="fund-value">${money(target.value)}</div><p>Current fund value</p>` : '<p>Choose where your current fund will be switched.</p>'}</div>
+      ${target ? `<p class="fund-risk-row">${fundRiskTag(target)}</p><div class="fund-value">${money(target.value)}</div><p>Current fund value</p>` : '<p>Choose where your current fund will be switched.</p>'}</div>
       ${selectField({ id: 'target-fund', label: 'Target fund', value: state.targetId, placeholder: 'Choose a fund', options: fundOptions('target'), disabled })}
+      ${target ? `<p class="fund-mobile-meta fund-mobile-risk">${fundRiskTag(target)}</p>` : ''}
       <div class="fund-card-action">${state.fundCheck === 'checking' ? `<div class="fund-checking" role="status">${icon('progress_activity')}<span><strong>Checking fund requirements…</strong><small>Reviewing risk and suitability conditions</small></span></div>` : target ? '<button class="link-button" type="button" data-action="fund-details">View fund details</button>' : ''}</div>
     </section>`;
 }
@@ -516,7 +709,7 @@ function currentPortfolio() {
     <details class="investment-policy-card flow-portfolio-card">
       <summary class="flow-portfolio-summary">
         <span><strong>Elizabeth's Policy</strong><small>${policy.product} <span>#${policy.id}</span></small></span>
-        <span class="portfolio-toggle"><span class="show-label">Show Fund Breakdown</span><span class="hide-label">Hide Fund Breakdown</span>${icon('expand_more')}</span>
+        <span class="portfolio-toggle"><span class="visually-hidden">Show or hide fund breakdown</span>${icon('expand_more')}</span>
       </summary>
       <div class="policy-overview"><div><span>Income Payout Option ${icon('help')}</span><strong>${investmentPolicy?.payout || 'Reinvestment'}</strong><small>AS OF ${(investmentPolicy?.asOf || 'Sep 03, 2026').toUpperCase()}</small></div><div><span>Fund Value ${icon('help')}</span><strong>${money(total, policy.currency)}</strong></div></div>
       <div class="investment-breakdown flow-investment-breakdown" role="table" aria-label="Current fund holdings">
@@ -590,7 +783,8 @@ function switchSummary() {
 }
 
 function fundsView() {
-  const body = `${currentPortfolio()}<p class="fund-rules-helper">${icon('info')}<span><strong>Fund switch requirements:</strong> ₱10,000 minimum for Peso funds or US$500 for Dollar funds. Target funds must use the same currency and be available for this product.</span></p><div class="switch-grid">${sourceCard()}<div class="switch-arrow" aria-hidden="true">${sharpIcon('arrow_forward')}</div>${targetCard()}</div>${riskTriggerBanner()}${riskRequirementsPanel()}${switchSummary()}`;
+  const requirements = sectionMessage({ type: 'info', iconName: 'info', title: 'Fund Switch Requirements', text: '₱10,000 minimum for Peso funds or US$500 for Dollar funds. Target funds must use the same currency and be available for this product.', className: 'fund-requirements-banner' });
+  const body = `${requirements}${currentPortfolio()}<div class="switch-grid">${sourceCard()}<div class="switch-arrow" aria-hidden="true">${sharpIcon('arrow_forward')}</div>${targetCard()}</div>${riskTriggerBanner()}${riskRequirementsPanel()}${switchSummary()}`;
   const ready = state.sourceId && state.targetId && meetsMinimumSwitch() && riskGateComplete() && state.fundCheck !== 'checking';
   return flowLayout({
     active: 2,
@@ -599,8 +793,9 @@ function fundsView() {
     body,
     backAction: 'back-policy',
     nextAction: 'to-review',
-    nextLabel: 'Continue',
+    nextLabel: 'Next',
     nextDisabled: !ready,
+    allowOverflow: true,
   });
 }
 
@@ -627,7 +822,7 @@ function rpqView() {
     body,
     backAction: 'back-funds',
     nextAction: 'complete-rpq',
-    nextLabel: state.rpqSubmitting ? `${icon('progress_activity')} Submitting…` : 'Submit',
+    nextLabel: state.rpqSubmitting ? `${icon('progress_activity')} Processing…` : 'Next',
     nextDisabled: answered !== rpqQuestions.length || state.rpqSubmitting,
     focusMode: true,
     headerExtra: '<nav class="flow-breadcrumb" aria-label="Breadcrumb"><span>Fund Switch</span><span aria-hidden="true">/</span><span>Suitability check</span><span aria-hidden="true">/</span><strong aria-current="page">Questionnaire</strong></nav>',
@@ -663,7 +858,7 @@ function reviewView() {
       <div class="review-document-body"><div class="review-document-file">${icon('check_circle')}<span><strong>Fund Switch Application Form (FSAF)</strong><small>fund_switch_application_form.pdf</small></span></div><button class="btn btn-secondary" type="button" data-action="preview-document">Preview FSAF</button></div>
     </section>
     <label class="ack-row"><input id="review-ack" type="checkbox" ${state.acknowledged ? 'checked' : ''}/><span>I confirm that I have reviewed the details above and understood that fund values may fluctuate.</span></label>`;
-  return flowLayout({ active: 3, title: 'Review your fund switch', description: 'Before we proceed, please review the details below before signing your request.', body, backAction: 'back-funds', nextAction: 'to-sign', nextLabel: 'Proceed to Sign', nextDisabled: !state.acknowledged });
+  return flowLayout({ active: 3, title: 'Review your fund switch', description: 'Before we proceed, please review the details below before signing your request.', body, backAction: 'back-funds', nextAction: 'to-sign', nextLabel: 'Submit', nextDisabled: !state.acknowledged });
 }
 
 function successView() {
@@ -681,7 +876,6 @@ function successView() {
           <dt>Submitted</dt><dd>${submitted}</dd>
           <dt>Status</dt><dd>${statusTag('Submitted')}</dd>
         </dl></section>
-        ${sectionMessage({ type: 'info', iconName: 'info', title: 'What happens next?', text: 'We’ll review your request and update its status once processing begins. You can track your request under My Requests.', className: 'success-message' })}
       </div>
       <footer class="success-actions"><button class="btn btn-primary" type="button" data-action="my-requests">View My Requests</button><button class="btn btn-secondary" type="button" data-action="restart">Back to Services</button></footer>
     </section>`;
@@ -691,6 +885,11 @@ function render({ focus = true } = {}) {
   const views = { services: servicesView, investments: investmentView, requests: requestsView, policy: policyView, funds: fundsView, rpq: rpqView, review: reviewView, success: successView, 'vul-explore': vulExploreView };
   app.innerHTML = views[state.screen]();
   document.querySelectorAll('.main-nav [data-nav]').forEach((button) => {
+    const current = button.dataset.nav === state.activeNav;
+    button.classList.toggle('active', current);
+    button.toggleAttribute('aria-current', current);
+  });
+  document.querySelectorAll('.mobile-nav-list [data-nav]').forEach((button) => {
     const current = button.dataset.nav === state.activeNav;
     button.classList.toggle('active', current);
     button.toggleAttribute('aria-current', current);
@@ -968,14 +1167,13 @@ function openFundDetails() {
     objective: `${fund.name} is an available ${fund.currency} fund for this policy product, subject to its stated risk classification.`,
     horizon: fund.riskScore >= 9 ? '5 years or more' : '3 - 5 years or more',
   };
-  const category = details.category || fund.type;
   dialogRoot.innerHTML = `
     <div class="drawer-backdrop">
       <aside class="fund-drawer" role="dialog" aria-modal="true" aria-labelledby="fund-drawer-title" tabindex="-1">
         <header class="drawer-header">
           <button class="icon-button drawer-close" type="button" data-action="close-drawer" aria-label="Close fund details">${icon('close')}</button>
           <h2 id="fund-drawer-title">${fund.name}</h2>
-          <div class="drawer-tags"><span>${fund.risk}</span><span>${category}</span></div>
+          <div class="drawer-tags"><span>${fund.risk}</span></div>
           <p class="drawer-summary">${details.objective}</p>
         </header>
         <div class="drawer-content">
@@ -1034,6 +1232,7 @@ function closeFundFactsheet() {
 function closeModal() {
   dialogRoot.innerHTML = '';
   document.body.classList.remove('drawer-open', 'factsheet-open');
+  scenarioGuideButton.setAttribute('aria-expanded', 'false');
 }
 
 function openNonVulPolicyModal() {
@@ -1120,10 +1319,27 @@ document.addEventListener('change', (event) => {
   if (target.id === 'review-ack') { state.acknowledged = target.checked; render({ focus: false }); }
 });
 
+document.addEventListener('input', (event) => {
+  if (event.target.id !== 'scenario-search') return;
+  const query = event.target.value.trim().toLowerCase();
+  const links = [...dialogRoot.querySelectorAll('.scenario-link')];
+  links.forEach((link) => { link.hidden = !link.dataset.searchText.includes(query); });
+  const empty = dialogRoot.querySelector('.scenario-empty');
+  if (empty) empty.hidden = links.some((link) => !link.hidden);
+});
+
 document.addEventListener('click', (event) => {
   const service = event.target.closest('[data-service]');
   if (service) {
-    if (service.dataset.service === 'Fund Switch') { state.screen = 'policy'; render(); }
+    if (service.dataset.service === 'Fund Switch') {
+      state.prototypeScenarioId = '';
+      state.policyId = '';
+      state.sourceId = '';
+      state.targetId = '';
+      state.screen = 'policy';
+      setScenarioUrl();
+      render();
+    }
     else showToast(`${service.dataset.service} is outside this Fund Switch demo.`);
     return;
   }
@@ -1131,6 +1347,7 @@ document.addEventListener('click', (event) => {
   const nav = event.target.closest('[data-nav]');
   if (nav) {
     state.activeNav = nav.dataset.nav;
+    closeMobileNav({ restoreFocus: false });
     if (nav.dataset.nav === 'Investments') { state.screen = 'investments'; render(); return; }
     if (nav.dataset.nav === 'Services') { state.screen = 'services'; render(); return; }
     render({ focus: false });
@@ -1143,12 +1360,23 @@ document.addEventListener('click', (event) => {
 
   const control = event.target.closest('[data-action]');
   if (!control) {
+    if (dialogRoot.querySelector('.scenario-guide-popover') && !event.target.closest('.scenario-guide-popover')) closeScenarioGuide({ restoreFocus: false });
     document.querySelectorAll('.ds-select-menu:not([hidden])').forEach((menu) => { menu.hidden = true; });
     document.querySelectorAll('.ds-select-control[aria-expanded="true"]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
     return;
   }
   if (control.disabled) return;
   const action = control.dataset.action;
+  if (action === 'open-scenario-guide') {
+    if (dialogRoot.querySelector('.scenario-guide-popover')) closeScenarioGuide();
+    else openScenarioGuide();
+    return;
+  }
+  if (action === 'close-scenario-guide') { closeScenarioGuide(); return; }
+  if (action === 'load-prototype-scenario') { launchPrototypeScenario(control.dataset.scenarioId); return; }
+  if (action === 'open-mobile-nav') { openMobileNav(); return; }
+  if (action === 'close-mobile-nav') { closeMobileNav(); return; }
+  if (action === 'dismiss-mobile-nav' && event.target === mobileNav) { closeMobileNav(); return; }
   if (action === 'toggle-select') {
     const menu = document.querySelector(`#${control.dataset.selectId}-listbox`);
     const willOpen = menu.hidden;
@@ -1170,7 +1398,7 @@ document.addEventListener('click', (event) => {
     openSignatureModal();
     return;
   }
-  if (action === 'restart') { clearTimeout(submissionTimer); clearTimeout(rpqTimer); state.screen = 'services'; state.activeNav = 'Services'; closeModal(); render(); }
+  if (action === 'restart') { clearTimeout(submissionTimer); clearTimeout(rpqTimer); state.prototypeScenarioId = ''; state.screen = 'services'; state.activeNav = 'Services'; setScenarioUrl(); closeModal(); render(); }
   if (action === 'start-policy-fund-switch') {
     state.policyId = control.dataset.policyId;
     state.sourceId = control.dataset.sourceId;
@@ -1189,6 +1417,11 @@ document.addEventListener('click', (event) => {
   if (action === 'pending-policy-info') openPendingRequestModal(control.dataset.policyId);
   if (action === 'to-funds') {
     if (!selectedPolicy()?.fundSwitchEligible) return openNonVulPolicyModal();
+    const scenario = prototypeScenarios.find((item) => item.id === state.prototypeScenarioId);
+    if (scenario?.requiresPolicySelection && scenario.state.policyId === state.policyId) {
+      const { screen, policyId, ...fundPreset } = scenario.state;
+      Object.assign(state, fundPreset);
+    }
     state.screen = 'funds';
     render();
   }
@@ -1249,10 +1482,13 @@ document.addEventListener('keydown', (event) => {
     serviceCard.click();
     return;
   }
-  if (event.key === 'Escape' && dialogRoot.querySelector('.draft-modal')) restoreDraftReturnContext();
+  if (event.key === 'Escape' && !mobileNav.hidden) closeMobileNav();
+  else if (event.key === 'Escape' && dialogRoot.querySelector('.scenario-guide-popover')) closeScenarioGuide();
+  else if (event.key === 'Escape' && dialogRoot.querySelector('.draft-modal')) restoreDraftReturnContext();
   else if (event.key === 'Escape' && dialogRoot.querySelector('.factsheet-backdrop')) closeFundFactsheet();
   else if (event.key === 'Escape' && dialogRoot.querySelector('.drawer-backdrop')) closeFundDrawer();
   else if (event.key === 'Escape' && dialogRoot.innerHTML) closeModal();
 });
 
-render();
+const initialScenarioId = new URLSearchParams(window.location.search).get('scenario');
+if (!launchPrototypeScenario(initialScenarioId, { updateUrl: false })) render();
