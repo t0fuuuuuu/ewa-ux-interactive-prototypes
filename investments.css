@@ -1,5 +1,6 @@
 :root { --purple: #3f1778; --purple-dark: #29104f; --purple-soft: #f1e8fb; --magenta: #b52378; --ink: #263234; --muted: #626b7c; --line: #e4e1e7; --cream: #fff8f1; color: var(--ink); font-family: Lato, Arial, sans-serif; }
 * { box-sizing: border-box; }
+.visually-hidden { clip: rect(0 0 0 0); clip-path: inset(50%); height: 1px; overflow: hidden; position: absolute; white-space: nowrap; width: 1px; }
 html { scroll-behavior: smooth; }
 body { margin: 0; min-width: 320px; background: #fff; }
 a { color: inherit; }
@@ -13,7 +14,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 .public-header nav a:hover, .login-link:hover { color: var(--purple); }
 .login-link { align-items: center; background: var(--magenta); border-radius: 999px; color: #fff; display: flex; gap: 7px; padding: 9px 18px; }
 .login-link:hover { color: #fff; filter: brightness(.94); }
-.menu-button, .mobile-nav { display: none; }
+.menu-button, .mobile-nav-backdrop { display: none; }
 .investment-hero { background: #fff; min-height: 610px; overflow: hidden; padding: 84px max(7vw, 56px) 56px; position: relative; }
 .hero-copy { max-width: 650px; position: relative; z-index: 2; }
 .eyebrow { color: var(--magenta); display: block; font-size: 14px; font-weight: 900; letter-spacing: .08em; margin-bottom: 14px; text-transform: uppercase; }
@@ -131,11 +132,21 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px soli
 @media (max-width: 720px) {
   .public-header { grid-template-columns: 1fr auto; min-height: 64px; padding: 0 20px; }
   .public-logo img { width: 150px; }
-  .public-header > nav:not(.mobile-nav), .login-link { display: none; }
+  .public-header > nav, .login-link { display: none; }
   .menu-button { align-items: center; background: #fff; border: 2px solid var(--purple); border-radius: 999px; color: var(--purple); display: flex; font-weight: 700; gap: 7px; min-height: 40px; padding: 8px 16px; }
-  .mobile-nav { background: #fff; border-top: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0,0,0,.1); display: grid; gap: 0; left: 0; padding: 8px 20px 18px; position: absolute; right: 0; top: 64px; }
-  .mobile-nav[hidden] { display: none; }
-  .mobile-nav a { border-bottom: 1px solid var(--line); padding: 12px 0; }
+  body.public-menu-open { overflow: hidden; }
+  .mobile-nav-backdrop:not([hidden]) { background: rgba(0, 0, 0, .52); display: block; inset: 0; overflow-y: auto; position: fixed; z-index: 80; }
+  .mobile-nav-panel { background: #fff; box-shadow: 0 2px 10px rgba(0, 0, 0, .38); min-height: 476px; outline: 0; padding: 0 24px 24px; width: 100%; }
+  .mobile-nav-header { align-items: center; display: flex; justify-content: space-between; min-height: 80px; }
+  .mobile-nav-logo { display: block; }
+  .mobile-nav-logo img { display: block; width: 164px; }
+  .mobile-nav-close { align-items: center; background: #fff; border: 2px solid var(--purple); border-radius: 999px; color: var(--purple); cursor: pointer; display: inline-flex; font-size: 16px; font-weight: 700; gap: 8px; justify-content: center; min-height: 42px; padding: 8px 16px; }
+  .mobile-nav-close .material-symbols-rounded { font-size: 22px; }
+  .mobile-nav-links { display: flex !important; flex-direction: column; gap: 24px; padding: 16px 0 0; }
+  .public-header .mobile-nav-links a { color: var(--ink); font-size: 16px; font-weight: 400; line-height: 24px; text-decoration: none; }
+  .mobile-nav-divider { border-top: 1px solid var(--line); display: block; margin-top: 4px; }
+  .public-header .mobile-nav-links .mobile-login { align-items: center; background: var(--magenta); border-radius: 999px; color: #fff; display: flex; font-weight: 700; gap: 10px; justify-content: center; min-height: 48px; padding: 10px 20px; }
+  .mobile-login .material-symbols-rounded { font-size: 22px; }
   .investment-hero { background: #fff; display: flex; flex-direction: column; min-height: 0; padding: 32px 0 40px; }
   .hero-visual { border-radius: 32px 0 32px 0; height: 288px; margin: 0 16px; order: 0; position: static; width: calc(100% - 32px); }
   .hero-person { height: 318px; width: 300px; }

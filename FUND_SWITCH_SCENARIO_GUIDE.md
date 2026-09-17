@@ -1,6 +1,6 @@
 # Fund Switch Prototype — Scenario & Edge-Case Guide
 
-Prototype: http://fund-switch.localhost:4173/?v=4
+Published prototype: https://t0fuuuuuu.github.io/ewa-ux-interactive-prototypes/
 
 Use this guide from **Services → Fund Switch**. The sample policies below are intentionally configured to demonstrate the business rules and boundary cases in the prototype.
 
@@ -39,8 +39,10 @@ For a quick end-to-end review, use this order:
 3. `810000090302` — higher-risk Peso switch requiring RPQ/IPS.
 4. `810000090303` — below-PHP-minimum validation.
 5. `810000090304` and `810000090305` — exact PHP and USD minimum boundaries.
-6. `810000090307` — pending-request modal.
-7. `810000089312`, `810000087920`, and `810000088405` — Non-VUL, lapsed, and terminated policy handling.
+6. `810000090308` — Income Paying Fund with multiple source funds totaling 100%.
+7. `810000090309` — Income Paying Fund with insufficient eligible allocation.
+8. `810000090307` — pending-request modal.
+9. `810000089312`, `810000087920`, and `810000088405` — Non-VUL, lapsed, and terminated policy handling.
 
 When documenting results, record the policy number, source fund, target fund, whether RPQ/IPS appeared, and whether Continue was enabled. This makes each observation traceable to one business rule.
 
@@ -57,6 +59,8 @@ When documenting results, record the policy number, source fund, target fund, wh
 | Exact PHP minimum | `810000090304` Future Assure 10-Pay Peso | Select Policy → choose policy → Next → Source fund | A PHP 10,000 source passes the minimum validation. |
 | Exact USD minimum | `810000090305` Future Assure Max SP US Dollar | Select Policy → choose policy → Next → Source fund | A USD 500 source passes the minimum validation. |
 | Below USD minimum | `810000090306` Future Assure Max SP US Dollar | Select Policy → choose policy → Next → Source fund | Shows the USD 500 minimum error; target and Continue remain unavailable. |
+| Income Paying Fund — 100% | `810000090308` Future Assure Max SP US Dollar | Select Policy → Next → add the remaining source fund | Multiple held source funds can be combined until exactly 100% is selected. |
+| Income Paying Fund — insufficient | `810000090309` Future Assure Max SP US Dollar | Select Policy → Next | Shows that only 60% is eligible, blocks Continue, and directs the customer to another target. |
 | Pending request | `810000090307` Future Assure 5-Pay Peso | Select Policy → click the pending policy card | Opens the pending-request modal. The policy cannot be selected or submitted. |
 | Lapsed policy | `810000087920` Sure Start | Select Policy → Other Policies | Card is disabled and cannot be selected. |
 | Terminated policy | `810000088405` Future Assure Max | Select Policy → Other Policies | Card is disabled and cannot be selected. |
@@ -71,17 +75,23 @@ Choose a Peso policy or a Dollar policy, then open Target fund. The list must co
 
 Target funds are filtered by both product and currency. For example, the 3-Pay Peso policy (`810000090302`) includes the Peso Global Strategic Payout Fund, while the Regular Pay Peso policy (`810000085627`) does not.
 
-### 3. One source to one target
+### 3. Standard source and target behavior
 
-The flow supports one selected source fund and one selected target fund. Selecting a different source clears the existing target and suitability checks so stale selections cannot be submitted.
+The standard flow supports one selected source fund and one selected target fund. Selecting a different source clears the existing target and suitability checks so stale selections cannot be submitted. Income Paying Funds use the special 100% allocation rule below.
 
 ### 4. Minimum amount validation
 
 The minimum is PHP 10,000 or USD 500. The boundary is inclusive: exactly PHP 10,000 or USD 500 passes; any amount below it blocks target selection and Continue. The requirement is shown contextually on the fund-selection page.
 
+### 5. Income Paying Fund — 100% allocation
+
+When an Income Paying Fund is selected as the target, the customer can add held source funds until their combined allocation reaches exactly 100%. Continue remains blocked before 100% is selected.
+
+If all eligible source funds together cannot reach 100%, the prototype displays a blocking insufficient-allocation message and directs the customer to choose another target fund.
+
 ## Suitability scenarios
 
-### 5. Same-risk switch — no RPQ or IPS
+### 6. Same-risk switch — no RPQ or IPS
 
 Use policy `810000086143`:
 
@@ -90,7 +100,7 @@ Use policy `810000086143`:
 
 Because the target risk is not higher than the source risk, no RPQ or IPS panel appears and Continue becomes available after the fund pair is valid.
 
-### 6. Higher-risk switch — RPQ and IPS required
+### 7. Higher-risk switch — RPQ and IPS required
 
 Use policy `810000090302`:
 
@@ -99,43 +109,45 @@ Use policy `810000090302`:
 
 The page shows the risk-profile update message, then requires the Risk Profile Questionnaire followed by the Investment Policy Statement.
 
-### 7. RPQ aligned with target
+### 8. RPQ aligned with target
 
 Complete the RPQ with answers that produce a profile at or above the selected target’s risk level. Review and acknowledge the IPS. The suitability section becomes completed and Continue is enabled.
 
-### 8. RPQ below target risk
+If the customer changes only the target fund, retain the completed RPQ answers and calculated result. Re-evaluate that result against the new target fund and require a fresh IPS acknowledgement because the IPS is target-specific. Changing the source fund still clears the target and all suitability state.
+
+### 9. RPQ below target risk
 
 Complete the RPQ with a result below the selected target’s risk level. The result modal marks the selection as not aligned and offers Review answers / Choose another fund. Submission stays blocked until the customer chooses a suitable target and completes the required checks.
 
 ## Eligibility and request-state scenarios
 
-### 9. Non-VUL policy
+### 10. Non-VUL policy
 
 Dream Builder is intentionally visible so the user understands why it cannot be used. Selecting Next opens an explanation that the policy has no investment-linked funds. It does not redirect the customer into a VUL application.
 
-### 10. Pending request
+### 11. Pending request
 
 The pending policy appears with the available policies, without a status chip. Clicking it opens the Figma-aligned “Existing Fund Switch Request in Progress” modal. The user can track the request in My Requests and start another request only after processing is complete.
 
-### 11. Lapsed or terminated policy
+### 12. Lapsed or terminated policy
 
 Lapsed and terminated cards remain visible under Other Policies for transparency, but are disabled and cannot open the fund-switch flow.
 
 ## Draft and submitted-request scenarios
 
-### 12. Save a draft at policy selection
+### 13. Save a draft at policy selection
 
 Select any eligible policy, then choose Save as Draft. Confirm the modal. The draft is linked to that policy and appears under My Requests.
 
-### 13. Save a draft during fund selection or suitability checks
+### 14. Save a draft during fund selection or suitability checks
 
 Choose a source/target, or enter the RPQ/IPS flow, then choose Save as Draft. Resume from My Requests. The current policy and saved progress should be retained.
 
-### 14. Submitted request tracking
+### 15. Submitted request tracking
 
-Complete a valid path through review and submit. My Requests shows the request under the selected policy, with submitted/in-progress tracking. A submitted or in-progress request prevents starting another switch for the same policy.
+Complete a valid path through review, confirm the details, and submit directly from the authenticated portal session. No customer signature step is shown. My Requests under Services shows the request under the selected policy, with submitted/in-progress tracking. Dashboard and Policy Details show an indicator only after the request is completed. A submitted or in-progress request prevents starting another switch for the same policy.
 
-### 15. Draft/request policy association
+### 16. Draft/request policy association
 
 Verify that My Requests shows the policy actually used for the request. This is especially important when testing multiple policies in one browser session.
 
@@ -147,10 +159,14 @@ Verify that My Requests shows the policy actually used for the request. This is 
 - [ ] Target funds respect product and currency rules.
 - [ ] PHP 10,000 and USD 500 boundaries are inclusive.
 - [ ] Below-minimum sources block target selection and Continue.
-- [ ] One source and one target are enforced.
+- [ ] Standard switches enforce one source and one target.
+- [ ] Income Paying Fund targets allow multiple held source funds and require exactly 100% allocation.
+- [ ] Insufficient eligible allocation blocks the Income Paying Fund target and offers a recovery path.
 - [ ] Changing the source clears target and suitability state.
+- [ ] Changing only the target retains completed RPQ answers/result, re-checks alignment, and resets the target-specific IPS acknowledgement.
 - [ ] Same-risk switches skip RPQ and IPS.
 - [ ] Higher-risk switches require RPQ and IPS.
 - [ ] A below-target RPQ result blocks submission and offers a suitable recovery path.
 - [ ] Drafts resume against the correct policy.
+- [ ] Review confirmation submits directly without opening a signature modal.
 - [ ] Submitted/pending requests prevent duplicate requests for the same policy.

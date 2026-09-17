@@ -38,6 +38,19 @@ const riskCopy = {
   aggressive: ['Aggressive Investor', 'You seek higher potential returns over the long term and are comfortable with significant market fluctuations.'],
 };
 
+const publicMenuButton = document.querySelector('.public-header > .menu-button');
+const publicMenu = document.querySelector('#mobile-nav');
+let publicMenuReturnFocus = null;
+
+function setPublicMenu(open, { restoreFocus = true } = {}) {
+  if (open) publicMenuReturnFocus = document.activeElement;
+  publicMenu.hidden = !open;
+  document.body.classList.toggle('public-menu-open', open);
+  publicMenuButton.setAttribute('aria-expanded', String(open));
+  if (open) publicMenu.querySelector('.mobile-nav-panel').focus({ preventScroll: true });
+  else if (restoreFocus && publicMenuReturnFocus instanceof HTMLElement) publicMenuReturnFocus.focus({ preventScroll: true });
+}
+
 function renderFunds(risk = 'aggressive') {
   const grid = document.querySelector('#public-fund-grid');
   grid.innerHTML = publicFunds[risk].map((fund, index) => `
@@ -103,13 +116,14 @@ document.addEventListener('click', (event) => {
     document.querySelector('#performance-chart').hidden = !chartSelected;
     if (chartSelected) drawPerformanceChart();
   }
-  const menu = event.target.closest('.menu-button');
-  if (menu) {
-    const nav = document.querySelector('#mobile-nav');
-    const expanded = menu.getAttribute('aria-expanded') === 'true';
-    menu.setAttribute('aria-expanded', String(!expanded));
-    nav.hidden = expanded;
-  }
+  if (event.target.closest('.public-header > .menu-button')) setPublicMenu(true);
+  if (event.target.closest('[data-action="close-public-menu"]')) setPublicMenu(false);
+  if (event.target.matches('[data-action="dismiss-public-menu"]')) setPublicMenu(false);
+  if (event.target.closest('.mobile-nav-links a')) setPublicMenu(false, { restoreFocus: false });
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !publicMenu.hidden) setPublicMenu(false);
 });
 
 renderFunds();

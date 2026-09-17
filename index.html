@@ -9,14 +9,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0;20..48,400,1,0&family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@20..48,400,1,0&family=Montserrat:wght@700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=20" />
+    <link rel="stylesheet" href="styles.css?v=27" />
   </head>
   <body>
     <header class="main-nav">
-      <button class="brand" type="button" data-action="restart" aria-label="Return to Services">
+      <button class="brand" type="button" data-action="brand-home" aria-label="EastWest Ageas home">
         <img src="assets/figma-main-nav-logo.svg" alt="eastwest ageas insurance" />
       </button>
-      <nav aria-label="Primary navigation">
+      <nav class="public-nav-links" aria-label="Public navigation">
+        <button type="button" data-public-nav="Solutions">Solutions</button>
+        <button type="button" data-public-nav="Investment">Investment</button>
+        <button type="button" data-public-nav="About Us">About Us</button>
+        <button type="button" data-public-nav="News">News</button>
+        <button type="button" data-public-nav="Careers">Careers</button>
+        <button type="button" data-public-nav="Support">Support</button>
+        <button type="button" data-public-nav="Pay Now">Pay Now</button>
+      </nav>
+      <button class="public-login-pill" type="button" data-action="focus-login"><span class="material-symbols-rounded" aria-hidden="true">person</span> Log In</button>
+      <nav class="account-nav-links" aria-label="Account navigation">
         <button type="button" data-nav="Dashboard">Dashboard</button>
         <button type="button" data-nav="Policy Details">Policy Details</button>
         <button type="button" data-nav="Documents">Documents</button>
@@ -61,6 +71,6 @@
     </button>
     <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
     <div id="dialog-root"></div>
-    <script src="app.js?v=20"></script>
+    <script src="app.js?v=27"></script>
   </body>
 </html>
