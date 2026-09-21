@@ -51,7 +51,7 @@ const productFundMatrix = {
 };
 
 const policies = [
-  { id: '810000085627', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE (REGULAR PAY PESO)', productKey: 'future-assure-regular-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: false, pendingRequest: true },
+  { id: '810000085627', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE (REGULAR PAY PESO)', productKey: 'future-assure-regular-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: true },
   { id: '810000086143', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX (SP US DOLLAR)', productKey: 'future-assure-max-sp-usd', productType: 'VUL', currency: 'USD', status: 'Inforce', fundSwitchEligible: true, selectable: true },
   { id: '810000089312', owner: 'Elizabeth Garcia', product: 'DREAM BUILDER', productType: 'Non-VUL', status: 'Inforce', fundSwitchEligible: false, selectable: true },
   { id: '810000090301', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX (SP PESO)', productKey: 'future-assure-max-sp-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: true },
@@ -60,7 +60,7 @@ const policies = [
   { id: '810000090304', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE (10-PAY PESO)', productKey: 'future-assure-10-pay-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: true },
   { id: '810000090305', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX (SP US DOLLAR)', productKey: 'future-assure-max-sp-usd', productType: 'VUL', currency: 'USD', status: 'Inforce', fundSwitchEligible: true, selectable: true },
   { id: '810000090306', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX (SP US DOLLAR)', productKey: 'future-assure-max-sp-usd', productType: 'VUL', currency: 'USD', status: 'Inforce', fundSwitchEligible: true, selectable: true },
-  { id: '810000090307', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE (5-PAY PESO)', productKey: 'future-assure-5-pay-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: true },
+  { id: '810000090307', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE (5-PAY PESO)', productKey: 'future-assure-5-pay-peso', productType: 'VUL', currency: 'PHP', status: 'Inforce', fundSwitchEligible: true, selectable: false, pendingRequest: true },
   { id: '810000090308', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX (SP US DOLLAR)', productKey: 'future-assure-max-sp-usd', productType: 'VUL', currency: 'USD', status: 'Inforce', fundSwitchEligible: true, selectable: true },
   { id: '810000090309', owner: 'Elizabeth Garcia', product: 'FUTURE ASSURE MAX (SP US DOLLAR)', productKey: 'future-assure-max-sp-usd', productType: 'VUL', currency: 'USD', status: 'Inforce', fundSwitchEligible: true, selectable: true },
   { id: '810000087920', owner: 'Elizabeth Garcia', product: 'SURE START', productType: 'Non-VUL', status: 'Lapsed', fundSwitchEligible: false, selectable: false },
@@ -307,6 +307,14 @@ const prototypeScenarios = [
     description: 'The 3-Pay Peso policy exposes its own allowed target list, including Global Strategic Payout Fund.',
     requiresPolicySelection: true,
     state: { screen: 'funds', policyId: '810000090302', sourceId: 'bond', fundCheck: 'complete' },
+  },
+  {
+    id: 'pending-request',
+    category: 'Policy eligibility',
+    title: 'Existing Fund Switch Request',
+    description: 'Shows duplicate-request handling only for a policy with an active Fund Switch request.',
+    requiresPolicySelection: true,
+    state: { screen: 'policy', policyId: '810000090307' },
   },
   {
     id: 'income-paying-multi-source',
